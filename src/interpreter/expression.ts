@@ -15,6 +15,10 @@ export function evaluate(context: Context, expr: ast.Expression<Location>): Valu
     case "Literal": {
       return expr.value;
     }
+    case "TypeLiteral": {
+      // TODO
+      throw err(`'${expr.value}' is a type, but is being used as a value`);
+    }
     case "Parentheses": {
       return rec(expr.body);
     }
@@ -61,6 +65,13 @@ export function evaluate(context: Context, expr: ast.Expression<Location>): Valu
         case "||":
           return rec(expr.left) || rec(expr.right);
       }
+    }
+    case "AscriptionExpression": {
+      return rec(expr.left);
+    }
+    case "ConversionExpression": {
+      // TODO
+      throw err(`not implemented`);
     }
   }
 }

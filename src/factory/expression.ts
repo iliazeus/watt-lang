@@ -10,6 +10,10 @@ import {
   Parentheses,
   PrefixExpression,
   PrefixOperator,
+  AscriptionExpression,
+  TypeLiteralValue,
+  TypeLiteral,
+  ConversionExpression,
 } from "../ast/expression";
 
 export function makeIdentifier<TMeta>(name: string, meta: TMeta): Identifier<TMeta> {
@@ -18,6 +22,10 @@ export function makeIdentifier<TMeta>(name: string, meta: TMeta): Identifier<TMe
 
 export function makeLiteral<TMeta>(value: LiteralValue, meta: TMeta): Literal<TMeta> {
   return { type: "Literal", value, meta };
+}
+
+export function makeTypeLiteral<TMeta>(value: TypeLiteralValue, meta: TMeta): TypeLiteral<TMeta> {
+  return { type: "TypeLiteral", value, meta };
 }
 
 export function makeParentheses<TMeta>(body: Expression<TMeta>, meta: TMeta): Parentheses<TMeta> {
@@ -48,4 +56,20 @@ export function makeLogicalExpression<TMeta>(
   meta: TMeta
 ): LogicalExpression<TMeta> {
   return { type: "LogicalExpression", left, operator, right, meta };
+}
+
+export function makeAscriptionExpression<TMeta>(
+  left: Expression<TMeta>,
+  right: Expression<TMeta>,
+  meta: TMeta
+): AscriptionExpression<TMeta> {
+  return { type: "AscriptionExpression", left, right, meta };
+}
+
+export function makeConversionExpression<TMeta>(
+  left: Expression<TMeta>,
+  right: Expression<TMeta>,
+  meta: TMeta
+): ConversionExpression<TMeta> {
+  return { type: "ConversionExpression", left, right, meta };
 }

@@ -20,7 +20,7 @@ Expression_3
   / Expression_4
 
 Expression_4
-  = BinaryExpression_4
+  = ConversionExpression
   / Expression_5
 
 Expression_5
@@ -28,11 +28,20 @@ Expression_5
   / Expression_6
 
 Expression_6
-  = PrefixExpression
+  = BinaryExpression_6
   / Expression_7
 
 Expression_7
+  = PrefixExpression
+  / Expression_8
+
+Expression_8
+  = AscriptionExpression
+  / Expression_9
+
+Expression_9
   = Literal
+  / TypeLiteral
   / Identifier
   / Parentheses
 
@@ -46,6 +55,10 @@ Literal
   / value:NUM
     { return factory.makeLiteral(JSON.parse(value), location()) }
 
+TypeLiteral
+  = ("boolean" / "scalar")
+    { return factory.makeTypeLiteral(text(), location()) }
+
 Parentheses
   = "(" _ expr:Expression _ ")"
     { return factory.makeParentheses(expr, location()) }
@@ -57,29 +70,29 @@ PrefixExpression
 PrefixOperator
   = "!" / "+" / "-"
 
+BinaryExpression_6
+  = left:Expression_7 _ op:BinaryOperator_6 _ right:Expression_6
+    { return factory.makeBinaryExpression(left, op, right, location()) }
+
+BinaryOperator_6
+  = "*" / "/" / "%"
+
 BinaryExpression_5
   = left:Expression_6 _ op:BinaryOperator_5 _ right:Expression_5
     { return factory.makeBinaryExpression(left, op, right, location()) }
 
 BinaryOperator_5
-  = "*" / "/" / "%"
-
-BinaryExpression_4
-  = left:Expression_5 _ op:BinaryOperator_4 _ right:Expression_4
-    { return factory.makeBinaryExpression(left, op, right, location()) }
-
-BinaryOperator_4
   = "-" / "+"
 
 BinaryExpression_3
-  = left:Expression_4 _ op:BinaryOperator_3 _ right:Expression_3
+  = left:Expression_5 _ op:BinaryOperator_3 _ right:Expression_3
     { return factory.makeBinaryExpression(left, op, right, location()) }
 
 BinaryOperator_3
   = "==" / "!=" / "<=" / ">=" / "<" / ">"
 
 LogicalExpression_2
-  = left:Expression_4 _ op:LogicalOperator_2 _ right:Expression_2
+  = left:Expression_5 _ op:LogicalOperator_2 _ right:Expression_2
     { return factory.makeLogicalExpression(left, op, right, location()) }
 
 LogicalOperator_2
@@ -92,9 +105,18 @@ LogicalExpression_1
 LogicalOperator_1
   = "||"
 
+AscriptionExpression
+  = left:Expression_9 _ right:Expression_9
+    { return factory.makeAscriptionExpression(left, right, location()) }
+
+ConversionExpression
+  = left:Expression_5 __ "as" __ right:Expression_4
+    { return factory.makeConversionExpression(left, right, location()) }
+
 NUM "numeric literal" = $([-+]? (([0-9]+([.][0-9]*)?) / ([.][0-9]+)) ([eE][-+]?[0-9]+)?)
 BOOL "boolean literal" = $("true") / $("false")
-ID "identifier" = $([a-zA-Z_][a-zA-Z0-9_]*)
+ID "identifier" = !(KW) $([a-zA-Z_][a-zA-Z0-9_]*)
+KW "keyword" = "as"
 
 _ "whitespace" = [ \t\n\r]*
 __ "whitespace" = [ \t\n\r]+

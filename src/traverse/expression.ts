@@ -11,6 +11,9 @@ export function mapChildren<S, T>(
     case "Literal":
       return { ...expr };
 
+    case "TypeLiteral":
+      return { ...expr };
+
     case "Parentheses":
       return { ...expr, body: fn(expr.body) };
 
@@ -21,6 +24,12 @@ export function mapChildren<S, T>(
       return { ...expr, left: fn(expr.left), right: fn(expr.right) };
 
     case "LogicalExpression":
+      return { ...expr, left: fn(expr.left), right: fn(expr.right) };
+
+    case "AscriptionExpression":
+      return { ...expr, left: fn(expr.left), right: fn(expr.right) };
+
+    case "ConversionExpression":
       return { ...expr, left: fn(expr.left), right: fn(expr.right) };
   }
 }
@@ -36,6 +45,9 @@ export function forEachChild<T>(
     case "Literal":
       return expr;
 
+    case "TypeLiteral":
+      return expr;
+
     case "Parentheses":
       return fn(expr.body), expr;
 
@@ -46,6 +58,12 @@ export function forEachChild<T>(
       return fn(expr.left), fn(expr.right), expr;
 
     case "LogicalExpression":
+      return fn(expr.left), fn(expr.right), expr;
+
+    case "AscriptionExpression":
+      return fn(expr.left), fn(expr.right), expr;
+
+    case "ConversionExpression":
       return fn(expr.left), fn(expr.right), expr;
   }
 }
