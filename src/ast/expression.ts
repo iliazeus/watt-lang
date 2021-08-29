@@ -43,7 +43,7 @@ export interface BinaryExpression<TMeta, TChildMeta = TMeta> {
   meta: TMeta;
 }
 
-export type BinaryOperator = "*" | "/" | "%" | "-" | "+";
+export type BinaryOperator = "*" | "/" | "%" | "-" | "+" | "==" | "!=" | "<=" | ">=" | "<" | ">";
 
 export interface LogicalExpression<TMeta, TChildMeta = TMeta> {
   type: "LogicalExpression";

@@ -40,6 +40,18 @@ export function evaluate(context: Context, expr: ast.Expression<Location>): Valu
           return (+rec(expr.left)) + (+rec(expr.right));
         case "-":
           return (+rec(expr.left)) - (+rec(expr.right));
+        case "==":
+          return rec(expr.left) === rec(expr.right);
+        case "!=":
+          return rec(expr.left) !== rec(expr.right);
+        case "<=":
+          return rec(expr.left) <= rec(expr.right);
+        case ">=":
+          return rec(expr.left) >= rec(expr.right);
+        case "<":
+          return rec(expr.left) < rec(expr.right);
+        case ">":
+          return rec(expr.left) > rec(expr.right);
       }
     }
     case "LogicalExpression": {

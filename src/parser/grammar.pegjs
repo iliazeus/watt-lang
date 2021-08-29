@@ -24,10 +24,14 @@ Expression_4
   / Expression_5
 
 Expression_5
-  = PrefixExpression
+  = BinaryExpression_5
   / Expression_6
 
 Expression_6
+  = PrefixExpression
+  / Expression_7
+
+Expression_7
   = Literal
   / Identifier
   / Parentheses
@@ -53,22 +57,29 @@ PrefixExpression
 PrefixOperator
   = "!" / "+" / "-"
 
+BinaryExpression_5
+  = left:Expression_6 _ op:BinaryOperator_5 _ right:Expression_5
+    { return factory.makeBinaryExpression(left, op, right, location()) }
+
+BinaryOperator_5
+  = "*" / "/" / "%"
+
 BinaryExpression_4
   = left:Expression_5 _ op:BinaryOperator_4 _ right:Expression_4
     { return factory.makeBinaryExpression(left, op, right, location()) }
 
 BinaryOperator_4
-  = "*" / "/" / "%"
+  = "-" / "+"
 
 BinaryExpression_3
   = left:Expression_4 _ op:BinaryOperator_3 _ right:Expression_3
     { return factory.makeBinaryExpression(left, op, right, location()) }
 
 BinaryOperator_3
-  = "-" / "+"
+  = "==" / "!=" / "<=" / ">=" / "<" / ">"
 
 LogicalExpression_2
-  = left:Expression_3 _ op:LogicalOperator_2 _ right:Expression_2
+  = left:Expression_4 _ op:LogicalOperator_2 _ right:Expression_2
     { return factory.makeLogicalExpression(left, op, right, location()) }
 
 LogicalOperator_2
