@@ -1,0 +1,28 @@
+{
+  "name": "watt-lang",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "prepare": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iliazeus/watt-lang.git"
+  },
+  "author": "Ilia Pozdnyakov <ilia.pozdnyakov@ya.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iliazeus/watt-lang/issues"
+  },
+  "homepage": "https://github.com/iliazeus/watt-lang#readme",
+  "devDependencies": {
+    "@types/node": "^16.7.5",
+    "pegjs": "^0.10.0",
+    "prettier": "^2.3.2",
+    "typescript": "^4.4.2"
+  },
+  "dependencies": {
+    "@types/pegjs": "^0.10.3"
+  }
+}
