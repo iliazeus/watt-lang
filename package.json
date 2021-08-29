@@ -2,9 +2,14 @@
   "name": "watt-lang",
   "version": "0.1.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "./dist/index.js",
+  "bin": {
+    "watt": "./dist/watt.js"
+  },
   "scripts": {
-    "prepare": "tsc"
+    "generate:parser": "pegjs --extra-options-file ./src/parser/options.json -o ./dist/parser/parser.js ./src/parser/grammar.pegjs",
+    "prepare": "tsc && npm run generate:parser",
+    "start": "node ./dist/watt.js"
   },
   "repository": {
     "type": "git",
@@ -18,11 +23,11 @@
   "homepage": "https://github.com/iliazeus/watt-lang#readme",
   "devDependencies": {
     "@types/node": "^16.7.5",
-    "pegjs": "^0.10.0",
     "prettier": "^2.3.2",
     "typescript": "^4.4.2"
   },
   "dependencies": {
+    "pegjs": "^0.10.0",
     "@types/pegjs": "^0.10.3"
   }
 }
