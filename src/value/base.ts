@@ -16,6 +16,7 @@ export class UndefinedOperationError extends Error {
 
 export abstract class BaseValue {
   abstract toExpression(): ast.Expression<{}>;
+  abstract toTypeExpression(): ast.Expression<{}>;
   abstract getType(): Value;
 
   not(): Value {

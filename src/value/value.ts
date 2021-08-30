@@ -5,12 +5,31 @@ import { BaseValue, UndefinedOperationError } from "./base";
 import { Dimensions } from "./dimensions";
 
 export type Value =
+  | Hole
   | BooleanValue
   | BooleanType
   | BooleanConstructor
   | DimValue
   | DimType
   | DimConstructor;
+
+export class Hole extends BaseValue {
+  constructor(readonly name: string, readonly type: Value) {
+    super();
+  }
+
+  toExpression(): ast.Identifier<{}> {
+    return factory.makeIdentifier(this.name, {});
+  }
+
+  toTypeExpression(): ast.Expression<{}> {
+    return this.type.toExpression();
+  }
+
+  getType(): Value {
+    return this.type;
+  }
+}
 
 export class BooleanValue extends BaseValue {
   constructor(readonly value: boolean) {
@@ -19,6 +38,10 @@ export class BooleanValue extends BaseValue {
 
   toExpression(): ast.Literal<{}> {
     return factory.makeLiteral(this.value, {});
+  }
+
+  toTypeExpression(): never {
+    throw new UndefinedOperationError();
   }
 
   getType(): BooleanType {
@@ -45,6 +68,10 @@ export class BooleanType extends BaseValue {
     throw new UndefinedOperationError();
   }
 
+  toTypeExpression(): ast.TypeLiteral<{}> {
+    return factory.makeTypeLiteral("boolean", {});
+  }
+
   getType(): never {
     throw new UndefinedOperationError();
   }
@@ -69,6 +96,10 @@ export class BooleanConstructor extends BaseValue {
     return factory.makeTypeLiteral("boolean", {});
   }
 
+  toTypeExpression(): never {
+    throw new UndefinedOperationError();
+  }
+
   getType(): BooleanConstructor {
     return this;
   }
@@ -89,6 +120,10 @@ export class DimValue extends BaseValue {
       factory.makeParentheses(this.cons.toExpression(), {}),
       {}
     );
+  }
+
+  toTypeExpression(): never {
+    throw new UndefinedOperationError();
   }
 
   getType(): DimType {
@@ -196,6 +231,10 @@ export class DimType extends BaseValue {
 
   toExpression(): never {
     throw new UndefinedOperationError();
+  }
+
+  toTypeExpression(): ast.Expression<{}> {
+    return this.cons.toExpression();
   }
 
   getType(): never {
@@ -331,6 +370,10 @@ export class DimConstructor extends BaseValue {
     }
 
     return result;
+  }
+
+  toTypeExpression(): never {
+    throw new UndefinedOperationError();
   }
 
   getType(): DimConstructor {
