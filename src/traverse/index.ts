@@ -1,1 +1,1 @@
-export * as expression from "./expression";
+export * from "./expression";

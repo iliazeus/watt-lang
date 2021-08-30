@@ -1,6 +1,13 @@
 import { Expression } from "../ast/expression";
 
-export function mapChildren<S, T>(
+export function annotateExpression<S, SS, T>(
+  expr: Expression<S, T>,
+  meta: SS
+): Expression<S & SS, T> {
+  return { ...expr, meta: { ...expr.meta, ...meta } };
+}
+
+export function mapChildExpressions<S, T>(
   expr: Expression<S>,
   fn: (child: Expression<S>) => Expression<T>
 ): Expression<S, T> {
@@ -34,7 +41,7 @@ export function mapChildren<S, T>(
   }
 }
 
-export function forEachChild<T>(
+export function forEachChildExpression<T>(
   expr: Expression<T>,
   fn: (child: Expression<T>) => void
 ): Expression<T> {
