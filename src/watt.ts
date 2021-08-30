@@ -6,12 +6,27 @@ import * as watt from "./index";
 
 const context: watt.interpreter.Context = {};
 
-context["m"] = watt.interpreter.Value.fromUnit("m", 1);
-context["km"] = watt.interpreter.Value.fromUnit("km", 1000);
+context["m"] = new watt.value.DimConstructor(watt.value.Dimensions.fromUnit("m"));
 
-context["s"] = watt.interpreter.Value.fromUnit("s", 1);
-context["min"] = watt.interpreter.Value.fromUnit("min", 60);
-context["h"] = watt.interpreter.Value.fromUnit("h", 3600);
+context["km"] = new watt.value.DimConstructor(
+  watt.value.Dimensions.fromUnit("km"),
+  context["m"].baseDims,
+  1000
+);
+
+context["s"] = new watt.value.DimConstructor(watt.value.Dimensions.fromUnit("s"));
+
+context["min"] = new watt.value.DimConstructor(
+  watt.value.Dimensions.fromUnit("min"),
+  context["s"].baseDims,
+  60
+);
+
+context["h"] = new watt.value.DimConstructor(
+  watt.value.Dimensions.fromUnit("h"),
+  context["s"].baseDims,
+  3600
+);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -24,7 +39,7 @@ rl.once("SIGINT", () => rl.close());
 rl.on("line", (input) => {
   try {
     const expr = watt.parser.parseExpression(input);
-    const value = watt.interpreter.expression.evaluate(context, expr);
+    const value = watt.interpreter.evaluateExpression(context, expr);
     const output = watt.printer.printExpression(value.toExpression());
     console.log(output);
   } catch (error) {
