@@ -2,31 +2,16 @@
 
 import * as readline from "readline";
 
-import * as watt from "./index";
+import { value as v, parser, interpreter, printer } from "./index";
 
-const context: watt.interpreter.Context = {};
+const ctx: interpreter.Context = {};
 
-context["m"] = new watt.value.DimConstructor(watt.value.Dimensions.fromUnit("m"));
+ctx["m"] = new v.DimConstructor(v.Dimensions.fromUnit("m"));
+ctx["km"] = new v.DimConstructor(v.Dimensions.fromUnit("km"), ctx["m"].baseDims, 1000);
 
-context["km"] = new watt.value.DimConstructor(
-  watt.value.Dimensions.fromUnit("km"),
-  context["m"].baseDims,
-  1000
-);
-
-context["s"] = new watt.value.DimConstructor(watt.value.Dimensions.fromUnit("s"));
-
-context["min"] = new watt.value.DimConstructor(
-  watt.value.Dimensions.fromUnit("min"),
-  context["s"].baseDims,
-  60
-);
-
-context["h"] = new watt.value.DimConstructor(
-  watt.value.Dimensions.fromUnit("h"),
-  context["s"].baseDims,
-  3600
-);
+ctx["s"] = new v.DimConstructor(v.Dimensions.fromUnit("s"));
+ctx["min"] = new v.DimConstructor(v.Dimensions.fromUnit("min"), ctx["s"].baseDims, 60);
+ctx["h"] = new v.DimConstructor(v.Dimensions.fromUnit("h"), ctx["s"].baseDims, 3600);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -38,9 +23,9 @@ rl.once("SIGINT", () => rl.close());
 
 rl.on("line", (input) => {
   try {
-    const expr = watt.parser.parseExpression(input);
-    const value = watt.interpreter.evaluateExpression(context, expr);
-    const output = watt.printer.printExpression(value.toExpression());
+    const expr = parser.parseExpression(input);
+    const evaluated = interpreter.evaluateExpression(ctx, expr);
+    const output = printer.printExpression(evaluated.meta.value.toExpression());
     console.log(output);
   } catch (error) {
     console.log(String(error));

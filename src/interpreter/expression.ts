@@ -1,13 +1,26 @@
 import * as ast from "../ast";
+import * as t from "../traverse";
+import * as v from "../value";
 
-import { Dimensions } from "../value/dimensions";
 import { Location } from "../util/location";
 
 import { Context, RuntimeError } from "./base";
-import { BooleanConstructor, BooleanValue, DimConstructor, DimValue, Value } from "../value/value";
 
-export function evaluateExpression(context: Context, expr: ast.Expression<Location>): Value {
-  const rec = (e: ast.Expression<Location>) => evaluateExpression(context, e);
+export type ValueAnnotation = { value: v.Value };
+
+export function evaluateExpression<TMeta extends Location>(
+  context: Context,
+  expr: ast.Expression<TMeta>
+): ast.Expression<TMeta & ValueAnnotation> {
+  const expr1 = t.mapChildExpressions(expr, (e) => evaluateExpression(context, e));
+  return t.annotateExpression(expr1, { value: lift(context, expr1) });
+}
+
+function lift<TMeta extends Location>(
+  context: Context,
+  expr: ast.Expression<TMeta, TMeta & ValueAnnotation>
+): v.Value {
+  const valueOf = (e: ast.Expression<ValueAnnotation>) => e.meta.value;
 
   try {
     switch (expr.type) {
@@ -20,27 +33,27 @@ export function evaluateExpression(context: Context, expr: ast.Expression<Locati
       case "Literal": {
         switch (typeof expr.value) {
           case "boolean":
-            return new BooleanValue(expr.value);
+            return new v.BooleanValue(expr.value);
           case "number":
-            return new DimValue(expr.value, new DimConstructor(Dimensions.SCALAR));
+            return new v.DimValue(expr.value, new v.DimConstructor(v.Dimensions.SCALAR));
         }
       }
 
       case "TypeLiteral": {
         switch (expr.value) {
           case "boolean":
-            return new BooleanConstructor();
+            return new v.BooleanConstructor();
           case "scalar":
-            return new DimConstructor(Dimensions.SCALAR);
+            return new v.DimConstructor(v.Dimensions.SCALAR);
         }
       }
 
       case "Parentheses": {
-        return rec(expr.body);
+        return valueOf(expr.body);
       }
 
       case "PrefixExpression": {
-        const argval = rec(expr.argument);
+        const argval = valueOf(expr.argument);
 
         switch (expr.operator) {
           case "!":
@@ -55,54 +68,54 @@ export function evaluateExpression(context: Context, expr: ast.Expression<Locati
       }
 
       case "PowerExpression": {
-        return rec(expr.argument).power(expr.power);
+        return valueOf(expr.argument).power(expr.power);
       }
 
       case "BinaryExpression": {
         switch (expr.operator) {
           case "*":
-            return rec(expr.left).times(rec(expr.right));
+            return valueOf(expr.left).times(valueOf(expr.right));
           case "/":
-            return rec(expr.left).divide(rec(expr.right));
+            return valueOf(expr.left).divide(valueOf(expr.right));
           case "%":
-            return rec(expr.left).modulo(rec(expr.right));
+            return valueOf(expr.left).modulo(valueOf(expr.right));
           case "+":
-            return rec(expr.left).plus(rec(expr.right));
+            return valueOf(expr.left).plus(valueOf(expr.right));
           case "-":
-            return rec(expr.left).minus(rec(expr.right));
+            return valueOf(expr.left).minus(valueOf(expr.right));
           case "==":
-            return rec(expr.left).equals(rec(expr.right));
+            return valueOf(expr.left).equals(valueOf(expr.right));
           case "!=":
-            return rec(expr.left).doesNotEqual(rec(expr.right));
+            return valueOf(expr.left).doesNotEqual(valueOf(expr.right));
           case "<=":
-            return rec(expr.left).lessThanOrEqual(rec(expr.right));
+            return valueOf(expr.left).lessThanOrEqual(valueOf(expr.right));
           case ">=":
-            return rec(expr.left).greaterThanOrEqual(rec(expr.right));
+            return valueOf(expr.left).greaterThanOrEqual(valueOf(expr.right));
           case "<":
-            return rec(expr.left).lessThan(rec(expr.right));
+            return valueOf(expr.left).lessThan(valueOf(expr.right));
           case ">":
-            return rec(expr.left).greaterThan(rec(expr.right));
+            return valueOf(expr.left).greaterThan(valueOf(expr.right));
         }
       }
 
       case "LogicalExpression": {
-        const left = rec(expr.left);
-        RuntimeError.assert(expr.left.meta, left instanceof BooleanValue, `must be a boolean`);
+        const left = valueOf(expr.left);
+        RuntimeError.assert(expr.left.meta, left instanceof v.BooleanValue, `must be a boolean`);
 
         switch (expr.operator) {
           case "&&":
-            return left.value ? rec(expr.right) : left;
+            return left.value ? valueOf(expr.right) : left;
           case "||":
-            return left.value ? left : rec(expr.right);
+            return left.value ? left : valueOf(expr.right);
         }
       }
 
       case "AscriptionExpression": {
-        return rec(expr.left).ascribe(rec(expr.right));
+        return valueOf(expr.left).ascribe(valueOf(expr.right));
       }
 
       case "ConversionExpression": {
-        return rec(expr.left).convert(rec(expr.right));
+        return valueOf(expr.left).convert(valueOf(expr.right));
       }
     }
   } catch (error) {
