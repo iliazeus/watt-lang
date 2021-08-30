@@ -40,6 +40,10 @@ Expression_8
   / Expression_9
 
 Expression_9
+  = PowerExpression
+  / Expression_10
+
+Expression_10
   = Literal
   / TypeLiteral
   / Identifier
@@ -69,6 +73,10 @@ PrefixExpression
 
 PrefixOperator
   = "!" / "+" / "-"
+
+PowerExpression
+  = expr:Expression_10 _ "^" _ pow:INT
+    { return factory.makePowerExpression(expr, Number(pow), location()) }
 
 BinaryExpression_6
   = left:Expression_7 _ op:BinaryOperator_6 _ right:Expression_6
@@ -106,16 +114,17 @@ LogicalOperator_1
   = "||"
 
 AscriptionExpression
-  = left:Expression_9 _ right:Expression_9
+  = left:Expression_10 __ right:Expression_10
     { return factory.makeAscriptionExpression(left, right, location()) }
 
 ConversionExpression
   = left:Expression_5 __ "as" __ right:Expression_4
     { return factory.makeConversionExpression(left, right, location()) }
 
+INT "integer literal" = $([-+]? [0-9]+)
 NUM "numeric literal" = $([-+]? (([0-9]+([.][0-9]*)?) / ([.][0-9]+)) ([eE][-+]?[0-9]+)?)
 BOOL "boolean literal" = $("true") / $("false")
-ID "identifier" = !(KW) $([a-zA-Z_][a-zA-Z0-9_]*)
+ID "identifier" = $(!(KW) [a-zA-Z_][a-zA-Z0-9_]*)
 KW "keyword" = "as"
 
 _ "whitespace" = [ \t\n\r]*

@@ -1,6 +1,8 @@
 import * as ast from "../ast";
 import { Location } from "../util/location";
-import { Context, RuntimeError, Value } from "./base";
+
+import { Context, RuntimeError } from "./base";
+import { Value } from "./value";
 
 export function evaluate(context: Context, expr: ast.Expression<Location>): Value {
   const rec = (e: ast.Expression<Location>) => evaluate(context, e);
@@ -13,11 +15,20 @@ export function evaluate(context: Context, expr: ast.Expression<Location>): Valu
       return value;
     }
     case "Literal": {
-      return expr.value;
+      switch (typeof expr.value) {
+        case "boolean":
+          return Value.fromBoolean(expr.value);
+        case "number":
+          return Value.fromScalar(expr.value);
+      }
     }
     case "TypeLiteral": {
-      // TODO
-      throw err(`'${expr.value}' is a type, but is being used as a value`);
+      switch (expr.value) {
+        case "boolean":
+          return Value.fromBoolean(true);
+        case "scalar":
+          return Value.fromScalar(1);
+      }
     }
     case "Parentheses": {
       return rec(expr.body);
@@ -25,53 +36,57 @@ export function evaluate(context: Context, expr: ast.Expression<Location>): Valu
     case "PrefixExpression": {
       switch (expr.operator) {
         case "!":
-          return !rec(expr.argument);
+          return rec(expr.argument).not();
         case "+":
-          return +rec(expr.argument);
+          return rec(expr.argument).unaryPlus();
         case "-":
-          return -rec(expr.argument);
+          return rec(expr.argument).unaryMinus();
       }
+    }
+    case "PowerExpression": {
+      return rec(expr.argument).power(expr.power);
     }
     case "BinaryExpression": {
       switch (expr.operator) {
         case "*":
-          return (+rec(expr.left)) * (+rec(expr.right));
+          return rec(expr.left).times(rec(expr.right));
         case "/":
-          return (+rec(expr.left)) / (+rec(expr.right));
+          return rec(expr.left).divide(rec(expr.right));
         case "%":
-          return (+rec(expr.left)) % (+rec(expr.right));
+          return rec(expr.left).modulo(rec(expr.right));
         case "+":
-          return (+rec(expr.left)) + (+rec(expr.right));
+          return rec(expr.left).plus(rec(expr.right));
         case "-":
-          return (+rec(expr.left)) - (+rec(expr.right));
+          return rec(expr.left).minus(rec(expr.right));
         case "==":
-          return rec(expr.left) === rec(expr.right);
+          return rec(expr.left).equals(rec(expr.right));
         case "!=":
-          return rec(expr.left) !== rec(expr.right);
+          return rec(expr.left).notEquals(rec(expr.right));
         case "<=":
-          return rec(expr.left) <= rec(expr.right);
+          return rec(expr.left).lessThanOrEqual(rec(expr.right));
         case ">=":
-          return rec(expr.left) >= rec(expr.right);
+          return rec(expr.left).greaterThanOrEqual(rec(expr.right));
         case "<":
-          return rec(expr.left) < rec(expr.right);
+          return rec(expr.left).lessThan(rec(expr.right));
         case ">":
-          return rec(expr.left) > rec(expr.right);
+          return rec(expr.left).greaterThan(rec(expr.right));
       }
     }
     case "LogicalExpression": {
+      const left = rec(expr.left);
+
       switch (expr.operator) {
         case "&&":
-          return rec(expr.left) && rec(expr.right);
+          return left.value ? rec(expr.right) : left;
         case "||":
-          return rec(expr.left) || rec(expr.right);
+          return left.value ? left : rec(expr.right);
       }
     }
     case "AscriptionExpression": {
-      return rec(expr.left);
+      return rec(expr.left).times(rec(expr.right));
     }
     case "ConversionExpression": {
-      // TODO
-      throw err(`not implemented`);
+      return rec(expr.left).as(rec(expr.right));
     }
   }
 }

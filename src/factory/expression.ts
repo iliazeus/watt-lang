@@ -14,6 +14,7 @@ import {
   TypeLiteralValue,
   TypeLiteral,
   ConversionExpression,
+  PowerExpression,
 } from "../ast/expression";
 
 export function makeIdentifier<TMeta>(name: string, meta: TMeta): Identifier<TMeta> {
@@ -38,6 +39,14 @@ export function makePrefixExpression<TMeta>(
   meta: TMeta
 ): PrefixExpression<TMeta> {
   return { type: "PrefixExpression", operator, argument, meta };
+}
+
+export function makePowerExpression<TMeta>(
+  argument: Expression<TMeta>,
+  power: number,
+  meta: TMeta
+): PowerExpression<TMeta> {
+  return { type: "PowerExpression", argument, power, meta };
 }
 
 export function makeBinaryExpression<TMeta>(

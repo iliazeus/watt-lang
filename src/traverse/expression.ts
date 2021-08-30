@@ -27,6 +27,9 @@ export function mapChildExpressions<S, T>(
     case "PrefixExpression":
       return { ...expr, argument: fn(expr.argument) };
 
+    case "PowerExpression":
+      return { ...expr, argument: fn(expr.argument) };
+
     case "BinaryExpression":
       return { ...expr, left: fn(expr.left), right: fn(expr.right) };
 
@@ -59,6 +62,9 @@ export function forEachChildExpression<T>(
       return fn(expr.body), expr;
 
     case "PrefixExpression":
+      return fn(expr.argument), expr;
+
+    case "PowerExpression":
       return fn(expr.argument), expr;
 
     case "BinaryExpression":

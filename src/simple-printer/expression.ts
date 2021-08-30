@@ -19,6 +19,9 @@ export function printExpression(expr: ast.Expression<unknown>): string {
     case "PrefixExpression":
       return `${expr.operator}${rec(expr.argument)}`;
 
+    case "PowerExpression":
+      return `${rec(expr.argument)}^${expr.power}`;
+
     case "BinaryExpression":
       return `${rec(expr.left)} ${expr.operator} ${rec(expr.right)}`;
 

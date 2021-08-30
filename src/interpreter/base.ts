@@ -1,8 +1,8 @@
 import { Location, locationToString } from "../util/location";
 
-export type Context = { [name: string]: Value };
+import { Value } from "./value";
 
-export type Value = boolean | number;
+export type Context = { [name: string]: Value };
 
 export class RuntimeError extends Error {
   override name = "RuntimeError";

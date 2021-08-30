@@ -4,6 +4,7 @@ export type Expression<TMeta, TChildMeta = TMeta> =
   | TypeLiteral<TMeta>
   | Parentheses<TMeta, TChildMeta>
   | PrefixExpression<TMeta, TChildMeta>
+  | PowerExpression<TMeta, TChildMeta>
   | BinaryExpression<TMeta, TChildMeta>
   | LogicalExpression<TMeta, TChildMeta>
   | AscriptionExpression<TMeta, TChildMeta>
@@ -45,6 +46,13 @@ export interface PrefixExpression<TMeta, TChildMeta = TMeta> {
 }
 
 export type PrefixOperator = "!" | "+" | "-";
+
+export interface PowerExpression<TMeta, TChildMeta = TMeta> {
+  type: "PowerExpression";
+  argument: Expression<TChildMeta>;
+  power: number;
+  meta: TMeta;
+}
 
 export interface BinaryExpression<TMeta, TChildMeta = TMeta> {
   type: "BinaryExpression";
