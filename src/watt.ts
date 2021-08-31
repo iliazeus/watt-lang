@@ -27,18 +27,41 @@ const rl = readline.createInterface({
 });
 
 rl.once("SIGINT", () => rl.close());
+rl.once("close", () => console.log());
 
 rl.on("line", (input) => {
   try {
     if (input.match(/^\s*$/)) return;
 
-    const match = input.match(/^\s*([.]\w+)(.*)/);
+    const match = input.match(/^\s*([.]\w+)\s*(.*)/);
     const command = match?.[1] ?? ".eval";
     input = match?.[2] ?? input;
 
+    if (command === ".help") {
+      console.log(".help           show this message");
+      console.log(".exit           exit the REPL");
+      console.log(".clear          clear the screen");
+      console.log(".ast <expr>     show the AST");
+      console.log(".parens <epxr>  fully parenthesize an expression");
+      console.log(".type <expr>    show type of expression");
+      console.log(".eval <expr>    evaluate an expression");
+      return;
+    }
+
+    if (command === ".exit") {
+      rl.setPrompt("");
+      setImmediate(() => rl.close());
+      return;
+    }
+
+    if (command === ".clear") {
+      console.clear();
+      return;
+    }
+
     if (command === ".ast") {
       const expr = parser.parseExpression(input);
-      console.log(JSON.stringify(expr, undefined, 2));
+      console.dir(expr, { depth: null });
       return;
     }
 
