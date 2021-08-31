@@ -2,7 +2,7 @@
 
 import * as readline from "readline";
 
-import { value as v, parser, typecheck, interpreter, printer } from "./index";
+import { value as v, parser, typecheck, interpreter, printer, util } from "./index";
 
 const ctx: interpreter.Context = {};
 
@@ -30,13 +30,23 @@ rl.once("SIGINT", () => rl.close());
 
 rl.on("line", (input) => {
   try {
-    const match = /([.]\w+) (.*)/.exec(input);
+    if (input.match(/^\s*$/)) return;
+
+    const match = input.match(/^\s*([.]\w+)(.*)/);
     const command = match?.[1] ?? ".eval";
     input = match?.[2] ?? input;
 
     if (command === ".ast") {
       const expr = parser.parseExpression(input);
       console.log(JSON.stringify(expr, undefined, 2));
+      return;
+    }
+
+    if (command === ".parens") {
+      const expr = parser.parseExpression(input);
+      const parens = util.parenthesizeExpression(expr);
+      const output = printer.printExpression(parens);
+      console.log(output);
       return;
     }
 
