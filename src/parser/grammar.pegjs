@@ -125,7 +125,7 @@ INT "integer literal" = $([-+]? [0-9]+)
 NUM "numeric literal" = $([-+]? (([0-9]+([.][0-9]*)?) / ([.][0-9]+)) ([eE][-+]?[0-9]+)?)
 BOOL "boolean literal" = $("true") / $("false")
 ID "identifier" = $(!(KW) [a-zA-Z_][a-zA-Z0-9_]*)
-KW "keyword" = "as"
+KW "keyword" = $("as" / "unit" / "type")
 
 _ "whitespace" = [ \t\n\r]*
 __ "whitespace" = [ \t\n\r]+

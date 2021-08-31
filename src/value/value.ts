@@ -1,8 +1,19 @@
 import * as ast from "../ast";
 import * as factory from "../factory";
 
-import { BaseValue, UndefinedOperationError } from "./base";
 import { Dimensions } from "./dimensions";
+
+export class UndefinedOperationError extends Error {
+  override name = "UndefinedOperationError";
+
+  constructor() {
+    super(`operation not defined`);
+  }
+
+  static assert(cond: boolean): asserts cond {
+    if (!cond) throw new UndefinedOperationError();
+  }
+}
 
 export type Value =
   | Hole
@@ -13,17 +24,15 @@ export type Value =
   | DimType
   | DimConstructor;
 
-export class Hole extends BaseValue {
-  constructor(readonly name: string, readonly type: Value) {
-    super();
-  }
+export class Hole {
+  constructor(readonly name: string, readonly type: Value) {}
 
   toExpression(): ast.Identifier<{}> {
     return factory.makeIdentifier(this.name, {});
   }
 
-  toTypeExpression(): ast.Expression<{}> {
-    return this.type.toExpression();
+  toTypeExpression(): never {
+    throw new UndefinedOperationError();
   }
 
   getType(): Value {
@@ -31,39 +40,27 @@ export class Hole extends BaseValue {
   }
 }
 
-export class BooleanValue extends BaseValue {
-  constructor(readonly value: boolean) {
-    super();
-  }
+export class BooleanValue {
+  constructor(readonly value: boolean) {}
 
   toExpression(): ast.Literal<{}> {
     return factory.makeLiteral(this.value, {});
   }
 
-  toTypeExpression(): never {
-    throw new UndefinedOperationError();
+  toTypeExpression(): ast.Literal<{}> {
+    return this.toExpression();
   }
 
-  getType(): BooleanType {
-    return new BooleanType();
+  getType(): BooleanValue {
+    return this;
   }
 
-  override not(): BooleanValue {
-    return new BooleanValue(!this.value);
-  }
-
-  override equals(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof BooleanValue);
-    return new BooleanValue(this.value === other.value);
-  }
-
-  override doesNotEqual(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof BooleanValue);
-    return new BooleanValue(this.value !== other.value);
+  equals(other: BooleanValue): boolean {
+    return this.value === other.value;
   }
 }
 
-export class BooleanType extends BaseValue {
+export class BooleanType {
   toExpression(): never {
     throw new UndefinedOperationError();
   }
@@ -76,44 +73,42 @@ export class BooleanType extends BaseValue {
     throw new UndefinedOperationError();
   }
 
-  override not(): BooleanType {
-    return this;
-  }
-
-  override equals(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof BooleanType);
-    return this;
-  }
-
-  override doesNotEqual(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof BooleanType);
-    return this;
+  isSubtypeOf(other: Value): boolean {
+    return other instanceof BooleanType;
   }
 }
 
-export class BooleanConstructor extends BaseValue {
+export class BooleanConstructor {
   toExpression(): ast.TypeLiteral<{}> {
     return factory.makeTypeLiteral("boolean", {});
   }
 
-  toTypeExpression(): never {
-    throw new UndefinedOperationError();
+  toTypeExpression(): ast.Expression<{}> {
+    return factory.makeAscriptionExpression(
+      factory.makeIdentifier("type", {}),
+      this.toExpression(),
+      {}
+    );
   }
 
   getType(): BooleanConstructor {
     return this;
   }
+
+  isSubtypeOf(other: Value): boolean {
+    return other instanceof BooleanConstructor;
+  }
 }
 
-export class DimValue extends BaseValue {
-  constructor(readonly value: number, readonly cons: DimConstructor) {
-    super();
+export class DimValue {
+  constructor(readonly value: number, readonly cons: DimConstructor) {}
+
+  get isScalar(): boolean {
+    return this.cons.isScalar;
   }
 
   toExpression(): ast.Expression<{}> {
-    if (this.cons.dims.isScalar) {
-      return factory.makeLiteral(this.value, {});
-    }
+    if (this.isScalar) return factory.makeLiteral(this.value, {});
 
     return factory.makeAscriptionExpression(
       factory.makeLiteral(this.value, {}),
@@ -122,111 +117,79 @@ export class DimValue extends BaseValue {
     );
   }
 
-  toTypeExpression(): never {
-    throw new UndefinedOperationError();
+  toTypeExpression(): ast.Expression<{}> {
+    return this.toExpression();
   }
 
-  getType(): DimType {
-    return new DimType(this.cons);
+  getType(): DimValue {
+    return this;
   }
 
-  override negate(): DimValue {
+  isSubtypeOf(other: Value): boolean {
+    return (
+      (other instanceof DimValue && this.equals(other)) ||
+      (other instanceof DimType && this.cons.equals(other.cons))
+    );
+  }
+
+  negate(): DimValue {
     return new DimValue(-this.value, this.cons);
   }
 
-  override power(power: number): DimValue {
+  power(power: number): DimValue {
     return new DimValue(this.value ** power, this.cons.power(power));
   }
 
-  override plus(other: Value): DimValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
+  plus(other: DimValue): DimValue {
     UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
     return new DimValue(this.value + other.value, this.cons);
   }
 
-  override minus(other: Value): DimValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
+  minus(other: DimValue): DimValue {
     UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
     return new DimValue(this.value - other.value, this.cons);
   }
 
-  override times(other: Value): DimValue | DimConstructor {
-    if (other instanceof DimConstructor) return other.times(this);
-
-    if (other instanceof DimValue) {
-      return new DimValue(this.value * other.value, this.cons.times(other.cons));
-    }
-
-    throw new UndefinedOperationError();
+  times(other: DimValue): DimValue {
+    return new DimValue(this.value * other.value, this.cons.times(other.cons));
   }
 
-  override divide(other: Value): DimValue {
-    if (other instanceof DimValue) {
-      return new DimValue(this.value / other.value, this.cons.divide(other.cons));
-    }
-
-    throw new UndefinedOperationError();
+  divide(other: DimValue): DimValue {
+    return new DimValue(this.value / other.value, this.cons.divide(other.cons));
   }
 
-  override modulo(other: Value): DimValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
-    UndefinedOperationError.assert(this.cons.dims.isScalar);
-    UndefinedOperationError.assert(other.cons.dims.isScalar);
+  modulo(other: DimValue): DimValue {
+    UndefinedOperationError.assert(this.isScalar);
+    UndefinedOperationError.assert(other.isScalar);
     return new DimValue(this.value % other.value, this.cons);
   }
 
-  override equals(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
+  equals(other: DimValue): boolean {
     UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value === other.value);
+    return this.value === other.value;
   }
 
-  override doesNotEqual(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
+  compareTo(other: DimValue): number {
     UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value !== other.value);
+    return this.value - other.value;
   }
 
-  override lessThan(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value < other.value);
-  }
-
-  override lessThanOrEqual(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value <= other.value);
-  }
-
-  override greaterThan(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value > other.value);
-  }
-
-  override greaterThanOrEqual(other: Value): BooleanValue {
-    UndefinedOperationError.assert(other instanceof DimValue);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanValue(this.value >= other.value);
-  }
-
-  override ascribe(cons: Value): DimValue {
-    UndefinedOperationError.assert(cons instanceof DimConstructor);
-    UndefinedOperationError.assert(this.cons.dims.isScalar);
+  ascribe(cons: DimConstructor): DimValue {
+    UndefinedOperationError.assert(this.isScalar);
     return new DimValue(this.value, cons);
   }
 
-  override convert(to: Value): DimValue {
-    UndefinedOperationError.assert(to instanceof DimConstructor);
+  convertTo(to: DimConstructor): DimValue {
     UndefinedOperationError.assert(this.cons.baseDims.equals(to.baseDims));
     return new DimValue((this.value * this.cons.factor) / to.factor, to);
   }
 }
 
-export class DimType extends BaseValue {
-  constructor(readonly cons: DimConstructor) {
-    super();
+export class DimType {
+  constructor(readonly cons: DimConstructor) {}
+
+  get isScalar(): boolean {
+    return this.cons.isScalar;
   }
 
   toExpression(): never {
@@ -241,121 +204,40 @@ export class DimType extends BaseValue {
     throw new UndefinedOperationError();
   }
 
-  override negate(): DimType {
-    return this;
+  isSubtypeOf(other: Value): boolean {
+    return other instanceof DimType && this.equals(other);
   }
 
-  override power(power: number): DimType {
+  power(power: number): DimType {
     return new DimType(this.cons.power(power));
   }
 
-  override plus(other: Value): DimType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return this;
+  times(other: DimType): DimType {
+    return new DimType(this.cons.times(other.cons));
   }
 
-  override minus(other: Value): DimType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return this;
+  divide(other: DimType): DimType {
+    return new DimType(this.cons.divide(other.cons));
   }
 
-  override times(other: Value): DimType {
-    if (other instanceof DimValue) {
-      UndefinedOperationError.assert(other.cons.dims.isScalar);
-      return new DimType(this.cons.times(other));
-    }
-
-    if (other instanceof DimType) {
-      return new DimType(this.cons.times(other.cons));
-    }
-
-    throw new UndefinedOperationError();
-  }
-
-  override divide(other: Value): DimType {
-    if (other instanceof DimValue) {
-      UndefinedOperationError.assert(other.cons.dims.isScalar);
-      return new DimType(this.cons.divide(other.cons));
-    }
-
-    if (other instanceof DimType) {
-      return new DimType(this.cons.divide(other.cons));
-    }
-
-    throw new UndefinedOperationError();
-  }
-
-  override modulo(other: Value): DimType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.isScalar);
-    UndefinedOperationError.assert(other.cons.dims.isScalar);
-    return this;
-  }
-
-  override equals(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override doesNotEqual(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override lessThan(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override lessThanOrEqual(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override greaterThan(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override greaterThanOrEqual(other: Value): BooleanType {
-    UndefinedOperationError.assert(other instanceof DimType);
-    UndefinedOperationError.assert(this.cons.dims.equals(other.cons.dims));
-    return new BooleanType();
-  }
-
-  override ascribe(cons: Value): DimType {
-    UndefinedOperationError.assert(cons instanceof DimConstructor);
-    UndefinedOperationError.assert(this.cons.dims.isScalar);
-    return new DimType(cons);
-  }
-
-  override convert(to: Value): DimType {
-    UndefinedOperationError.assert(to instanceof DimConstructor);
-    UndefinedOperationError.assert(this.cons.baseDims.equals(to.baseDims));
-    return new DimType(to);
+  equals(other: DimType): boolean {
+    return this.cons.equals(other.cons);
   }
 }
 
-export class DimConstructor extends BaseValue {
+export class DimConstructor {
   constructor(
     readonly dims: Dimensions,
     readonly baseDims: Dimensions = dims,
     readonly factor: number = 1
-  ) {
-    super();
+  ) {}
+
+  get isScalar(): boolean {
+    return this.dims.isScalar;
   }
 
   toExpression(): ast.Expression<{}> {
-    if (this.dims.isScalar) {
-      return factory.makeTypeLiteral("scalar", {});
-    }
+    if (this.isScalar) return factory.makeTypeLiteral("scalar", {});
 
     let result = [...this.dims.map]
       .map<ast.Expression<{}>>(([k, v]) => {
@@ -372,15 +254,27 @@ export class DimConstructor extends BaseValue {
     return result;
   }
 
-  toTypeExpression(): never {
-    throw new UndefinedOperationError();
+  toTypeExpression(): ast.Expression<{}> {
+    return factory.makeAscriptionExpression(
+      factory.makeIdentifier("unit", {}),
+      this.toExpression(),
+      {}
+    );
   }
 
   getType(): DimConstructor {
     return this;
   }
 
-  override power(power: number): DimConstructor {
+  isSubtypeOf(other: Value): boolean {
+    return other instanceof DimConstructor && this.equals(other);
+  }
+
+  negate(): DimConstructor {
+    return new DimConstructor(this.dims, this.baseDims, -this.factor);
+  }
+
+  power(power: number): DimConstructor {
     return new DimConstructor(
       this.dims.power(power),
       this.baseDims.power(power),
@@ -388,37 +282,27 @@ export class DimConstructor extends BaseValue {
     );
   }
 
-  override times(other: Value): DimConstructor {
-    if (other instanceof DimValue) {
-      UndefinedOperationError.assert(other.cons.dims.isScalar);
-      return new DimConstructor(this.dims, this.baseDims, this.factor * other.value);
-    }
-
-    if (other instanceof DimConstructor) {
-      return new DimConstructor(
-        this.dims.times(other.dims),
-        this.baseDims.times(other.baseDims),
-        this.factor * other.factor
-      );
-    }
-
-    throw new UndefinedOperationError();
+  times(other: DimConstructor): DimConstructor {
+    return new DimConstructor(
+      this.dims.times(other.dims),
+      this.baseDims.times(other.baseDims),
+      this.factor * other.factor
+    );
   }
 
-  override divide(other: Value): DimConstructor {
-    if (other instanceof DimValue) {
-      UndefinedOperationError.assert(other.cons.dims.isScalar);
-      return new DimConstructor(this.dims, this.baseDims, this.factor / other.value);
-    }
+  divide(other: DimConstructor): DimConstructor {
+    return new DimConstructor(
+      this.dims.divide(other.dims),
+      this.baseDims.divide(other.baseDims),
+      this.factor / other.factor
+    );
+  }
 
-    if (other instanceof DimConstructor) {
-      return new DimConstructor(
-        this.dims.divide(other.dims),
-        this.baseDims.divide(other.baseDims),
-        this.factor / other.factor
-      );
-    }
-
-    throw new UndefinedOperationError();
+  equals(other: DimConstructor): boolean {
+    return (
+      this.dims.equals(other.dims) &&
+      this.baseDims.equals(other.baseDims) &&
+      this.factor === other.factor
+    );
   }
 }

@@ -5,7 +5,11 @@ export class Dimensions {
     return new Dimensions(new Map([[label, 1]]));
   }
 
-  constructor(readonly map: ReadonlyMap<string, number>) {}
+  readonly map: ReadonlyMap<string, number>;
+
+  constructor(map: ReadonlyMap<string, number>) {
+    this.map = new Map([...map].filter(([_k, v]) => v !== 0));
+  }
 
   get isScalar(): boolean {
     return this.map.size == 0;
@@ -16,7 +20,9 @@ export class Dimensions {
   }
 
   set(label: string, value: number): Dimensions {
-    return new Dimensions(new Map([...this.map, [label, value]]));
+    const map = new Map(this.map);
+    value === 0 ? map.delete(label) : map.set(label, value);
+    return new Dimensions(map);
   }
 
   equals(other: Dimensions): boolean {
