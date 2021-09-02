@@ -11,6 +11,10 @@ export function evaluate<TMeta extends ast.LocationMeta>(
 
   try {
     switch (node.type) {
+      case "Unit": {
+        return new v.UnitValue();
+      }
+
       case "Identifier": {
         const value = context.getValue(node.name);
         if (value === undefined) throw RuntimeError.NameIsNotDefined(node, node.name);

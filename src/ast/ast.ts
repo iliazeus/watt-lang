@@ -6,6 +6,7 @@ export interface BaseNode<M> {
 export type Node<M, MM = M> = Expression<M, MM>;
 
 export type Expression<M, MM = M> =
+  | Unit<M>
   | Identifier<M>
   | Literal<M>
   | SpecialLiteral<M>
@@ -16,6 +17,10 @@ export type Expression<M, MM = M> =
   | LogicalExpression<M, MM>
   | AscriptionExpression<M, MM>
   | ConversionExpression<M, MM>;
+
+export interface Unit<M> extends BaseNode<M> {
+  type: "Unit";
+}
 
 export interface Identifier<M> extends BaseNode<M> {
   type: "Identifier";

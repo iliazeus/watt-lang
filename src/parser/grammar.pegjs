@@ -49,7 +49,12 @@ Expression_10
   = Literal
   / SpecialLiteral
   / Identifier
+  / Unit
   / Parentheses
+
+Unit
+  = "(" _ ")"
+    { return ast.makeUnit({ location: location() }) }
 
 Identifier
   = name:ID

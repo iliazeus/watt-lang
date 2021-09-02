@@ -1,5 +1,9 @@
 import * as ast from "./ast";
 
+export function makeUnit<M>(meta: M): ast.Unit<M> {
+  return { type: "Unit", meta };
+}
+
 export function makeIdentifier<M>(name: string, meta: M): ast.Identifier<M> {
   return { type: "Identifier", name, meta };
 }

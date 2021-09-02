@@ -2,6 +2,9 @@ import * as ast from "../ast";
 
 export function print(node: ast.Node<unknown>): string {
   switch (node.type) {
+    case "Unit":
+      return `()`;
+
     case "Identifier":
       return node.name;
 

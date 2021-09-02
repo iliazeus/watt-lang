@@ -15,12 +15,27 @@ export class UndefinedOperationError extends Error {
 }
 
 export type Value =
+  | UnitValue
   | BooleanValue
   | BooleanType
   | BooleanConstructor
   | DimValue
   | DimType
   | DimConstructor;
+
+export class UnitValue {
+  toExpression(): ast.Unit<{}> {
+    return ast.makeUnit({});
+  }
+
+  toTypeExpression(): ast.Unit<{}> {
+    return ast.makeUnit({});
+  }
+
+  getType(): UnitValue {
+    return this;
+  }
+}
 
 export class BooleanValue {
   constructor(readonly value: boolean) {}

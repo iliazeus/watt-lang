@@ -9,6 +9,7 @@ export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => v
 
 export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => void): ast.Node<M> {
   switch (node.type) {
+    case "Unit":
     case "Identifier":
     case "Literal":
     case "SpecialLiteral":
@@ -42,6 +43,7 @@ export function mapChildren<M, MM>(
   fn: (child: ast.Node<M>) => ast.Node<MM>
 ): ast.Node<M, MM> {
   switch (node.type) {
+    case "Unit":
     case "Identifier":
     case "Literal":
     case "SpecialLiteral":

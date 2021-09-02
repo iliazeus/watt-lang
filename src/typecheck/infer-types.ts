@@ -21,6 +21,10 @@ function lift<TMeta extends ast.LocationMeta>(
 
   try {
     switch (expr.type) {
+      case "Unit": {
+        return new v.UnitValue();
+      }
+
       case "Identifier": {
         const type = context.types.get(expr.name);
         if (type === undefined) throw TypeError.NameIsNotDefined(expr, expr.name);
