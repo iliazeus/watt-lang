@@ -91,7 +91,7 @@ export class DimValue {
   }
 
   toExpression(): ast.Expression<{}> {
-    if (this.isScalar) return factory.makeLiteral(this.value, {});
+    if (this.isScalar && this.cons.factor === 1) return factory.makeLiteral(this.value, {});
 
     return factory.makeAscriptionExpression(
       factory.makeLiteral(this.value, {}),
@@ -220,15 +220,19 @@ export class DimConstructor {
   }
 
   toExpression(): ast.Expression<{}> {
-    if (this.isScalar) return factory.makeTypeLiteral("scalar", {});
+    let result: ast.Expression<{}>;
 
-    let result = [...this.dims.map]
-      .map<ast.Expression<{}>>(([k, v]) => {
-        const id = factory.makeIdentifier(k, {});
-        if (v === 1) return id;
-        return factory.makePowerExpression(id, v, {});
-      })
-      .reduce((l, r) => factory.makeBinaryExpression(l, "*", r, {}));
+    if (this.isScalar) {
+      result = factory.makeTypeLiteral("scalar", {});
+    } else {
+      result = [...this.dims.map]
+        .map<ast.Expression<{}>>(([k, v]) => {
+          const id = factory.makeIdentifier(k, {});
+          if (v === 1) return id;
+          return factory.makePowerExpression(id, v, {});
+        })
+        .reduce((l, r) => factory.makeBinaryExpression(l, "*", r, {}));
+    }
 
     if (this.dims.equals(this.baseDims) && this.factor !== 1) {
       result = factory.makeBinaryExpression(factory.makeLiteral(this.factor, {}), "*", result, {});
