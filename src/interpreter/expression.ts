@@ -106,9 +106,9 @@ export function evaluateExpression<TMeta extends Location>(
 
           switch (expr.operator) {
             case "*":
-              return left.cons.times(right);
+              return new v.DimConstructor(right.dims, right.baseDims, left.value * right.factor);
             case "/":
-              return left.cons.divide(right);
+              return new v.DimConstructor(right.dims, right.baseDims, left.value / right.factor);
             default:
               throw RuntimeError.OperationNotDefined(expr.meta, expr.operator, left, right);
           }
@@ -119,9 +119,9 @@ export function evaluateExpression<TMeta extends Location>(
 
           switch (expr.operator) {
             case "*":
-              return left.times(right.cons);
+              return new v.DimConstructor(left.dims, left.baseDims, left.factor * right.value);
             case "/":
-              return left.divide(right.cons);
+              return new v.DimConstructor(left.dims, left.baseDims, left.factor / right.value);
             default:
               throw RuntimeError.OperationNotDefined(expr.meta, expr.operator, left, right);
           }
