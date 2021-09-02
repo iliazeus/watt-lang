@@ -1,33 +1,21 @@
 import * as ast from "../ast";
-import * as t from "../traverse";
 import * as v from "../value";
 
 import { Location } from "../util/location";
 
-import { Context, RuntimeError } from "./base";
-
-export type ValueAnnotation = { value: v.Value };
+import { RuntimeError } from "./base";
 
 export function evaluateExpression<TMeta extends Location>(
-  context: Context,
+  context: v.Context,
   expr: ast.Expression<TMeta>
-): ast.Expression<TMeta & ValueAnnotation> {
-  const expr1 = t.mapChildExpressions(expr, (e) => evaluateExpression(context, e));
-  return t.annotateExpression(expr1, { value: lift(context, expr1) });
-}
-
-function lift<TMeta extends Location>(
-  context: Context,
-  expr: ast.Expression<TMeta, TMeta & ValueAnnotation>
 ): v.Value {
-  const valueOf = (e: ast.Expression<ValueAnnotation>) => e.meta.value;
+  const valueOf = (e: typeof expr) => evaluateExpression(context, e);
 
   try {
     switch (expr.type) {
       case "Identifier": {
-        const value = context[expr.name];
+        const value = context.getValue(expr.name);
         if (value === undefined) throw RuntimeError.NameIsNotDefined(expr.meta, expr.name);
-        if (value instanceof v.Hole) throw RuntimeError.NameIsAHole(expr.meta, expr.name);
         return value;
       }
 

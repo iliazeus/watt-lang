@@ -16,29 +16,12 @@ export class UndefinedOperationError extends Error {
 }
 
 export type Value =
-  | Hole
   | BooleanValue
   | BooleanType
   | BooleanConstructor
   | DimValue
   | DimType
   | DimConstructor;
-
-export class Hole {
-  constructor(readonly name: string, readonly type: Value) {}
-
-  toExpression(): ast.Identifier<{}> {
-    return factory.makeIdentifier(this.name, {});
-  }
-
-  toTypeExpression(): never {
-    throw new UndefinedOperationError();
-  }
-
-  getType(): Value {
-    return this.type;
-  }
-}
 
 export class BooleanValue {
   constructor(readonly value: boolean) {}

@@ -3,8 +3,6 @@ import * as printer from "../simple-printer";
 
 import { Location, locationToString } from "../util/location";
 
-export type Context = { [name: string]: v.Value };
-
 const show = (val: v.Value) => printer.printExpression(val.toExpression());
 
 export class RuntimeError extends Error {
@@ -23,10 +21,6 @@ export class RuntimeError extends Error {
       loc,
       `base dimensions do not match of '${show(left)}' and '${show(right)}'`
     );
-  }
-
-  static NameIsAHole(loc: Location, name: string): RuntimeError {
-    return new RuntimeError(loc, `'${name}' is a hole`);
   }
 
   static NameIsNotDefined(loc: Location, name: string): RuntimeError {

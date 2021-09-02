@@ -3,8 +3,6 @@ import * as printer from "../simple-printer";
 
 import { Location, locationToString } from "../util/location";
 
-export type Context = { [name: string]: v.Value };
-
 const show = (val: v.Value) => printer.printExpression(val.toTypeExpression());
 
 export class TypeError extends Error {

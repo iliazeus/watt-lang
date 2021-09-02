@@ -5,7 +5,7 @@ export interface ListMap<K, V> extends Iterable<[K, V]> {
 
   add(key: K, value: V): ListMap<K, V>;
   delete(key: K): ListMap<K, V>;
-  set(key: K, value: V): ListMap<K, V>;
+  set(key: K, value: V): void;
 
   filter(fn: (value: V, key: K) => boolean): ListMap<K, V>;
 }
@@ -36,11 +36,13 @@ export namespace ListMap {
       return this;
     }
 
-    set(key: K, value: V): Cons<K, V> {
-      return new Cons(key, value, this);
+    set(_key: K, _value: V): void {
+      return;
     }
 
-    *[Symbol.iterator](): Iterator<[K, V]> {}
+    *[Symbol.iterator](): Iterator<[K, V]> {
+      return;
+    }
 
     filter(_fn: (value: V, key: K) => boolean): Nil<K, V> {
       return this;
@@ -48,7 +50,7 @@ export namespace ListMap {
   }
 
   class Cons<K, V> implements ListMap<K, V> {
-    constructor(readonly key: K, readonly value: V, readonly next: Nil<K, V> | Cons<K, V>) {}
+    constructor(public key: K, public value: V, public next: Nil<K, V> | Cons<K, V>) {}
 
     get isEmpty(): false {
       return false;
@@ -73,8 +75,9 @@ export namespace ListMap {
       return new Cons(this.key, this.value, this.next.delete(key));
     }
 
-    set(key: K, value: V): Cons<K, V> {
-      return new Cons(key, value, this.delete(key));
+    set(key: K, value: V): void {
+      if (this.key === key) this.value = value;
+      else this.next.set(key, value);
     }
 
     *[Symbol.iterator](): Iterator<[K, V]> {
@@ -83,11 +86,8 @@ export namespace ListMap {
     }
 
     filter(fn: (value: V, key: K) => boolean): Nil<K, V> | Cons<K, V> {
-      if (fn(this.value, this.key)) {
-        return new Cons(this.key, this.value, this.next.filter(fn));
-      } else {
-        return this.next.filter(fn);
-      }
+      if (fn(this.value, this.key)) return new Cons(this.key, this.value, this.next.filter(fn));
+      else return this.next.filter(fn);
     }
   }
 }

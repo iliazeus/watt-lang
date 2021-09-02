@@ -4,12 +4,12 @@ import * as v from "../value";
 
 import { Location } from "../util/location";
 
-import { Context, TypeError } from "./base";
+import { TypeError } from "./base";
 
 export type TypeAnnotation = { type: v.Value };
 
 export function inferTypesInExpression<TMeta extends Location>(
-  context: Context,
+  context: v.Context,
   expr: ast.Expression<TMeta>
 ): ast.Expression<TMeta & TypeAnnotation> {
   const expr1 = t.mapChildExpressions(expr, (e) => inferTypesInExpression(context, e));
@@ -17,7 +17,7 @@ export function inferTypesInExpression<TMeta extends Location>(
 }
 
 function lift<TMeta extends Location>(
-  context: Context,
+  context: v.Context,
   expr: ast.Expression<TMeta, TMeta & TypeAnnotation>
 ): v.Value {
   const typeOf = (e: ast.Expression<TypeAnnotation>) => e.meta.type;
@@ -25,9 +25,9 @@ function lift<TMeta extends Location>(
   try {
     switch (expr.type) {
       case "Identifier": {
-        const value = context[expr.name];
-        if (value === undefined) throw TypeError.NameIsNotDefined(expr.meta, expr.name);
-        return value.getType();
+        const type = context.types.get(expr.name);
+        if (type === undefined) throw TypeError.NameIsNotDefined(expr.meta, expr.name);
+        return type;
       }
 
       case "Literal": {

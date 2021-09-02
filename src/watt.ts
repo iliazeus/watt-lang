@@ -4,21 +4,24 @@ import * as readline from "readline";
 
 import { value as v, parser, typecheck, interpreter, printer, util } from "./index";
 
-const ctx: interpreter.Context = {};
+let ctx = new v.Context();
 
-ctx["m"] = new v.DimConstructor(v.Dimensions.fromUnit("m"));
-ctx["km"] = new v.DimConstructor(v.Dimensions.fromUnit("km"), ctx["m"].baseDims, 1000);
+{
+  const m = new v.DimConstructor(v.Dimensions.fromUnit("m"));
+  ctx = ctx.addType("m", m).addValue("m", m).addType("_m", new v.DimType(m));
 
-ctx["_m"] = new v.Hole("_m", new v.DimType(ctx["m"]));
-ctx["_km"] = new v.Hole("_km", new v.DimType(ctx["km"]));
+  const km = new v.DimConstructor(v.Dimensions.fromUnit("km"), m.baseDims, 1000);
+  ctx = ctx.addType("km", km).addValue("km", km).addType("_km", new v.DimType(m));
 
-ctx["s"] = new v.DimConstructor(v.Dimensions.fromUnit("s"));
-ctx["min"] = new v.DimConstructor(v.Dimensions.fromUnit("min"), ctx["s"].baseDims, 60);
-ctx["h"] = new v.DimConstructor(v.Dimensions.fromUnit("h"), ctx["s"].baseDims, 3600);
+  const s = new v.DimConstructor(v.Dimensions.fromUnit("s"));
+  ctx = ctx.addType("s", s).addValue("s", s).addType("_s", new v.DimType(s));
 
-ctx["_s"] = new v.Hole("_s", new v.DimType(ctx["s"]));
-ctx["_min"] = new v.Hole("_min", new v.DimType(ctx["min"]));
-ctx["_h"] = new v.Hole("_h", new v.DimType(ctx["h"]));
+  const min = new v.DimConstructor(v.Dimensions.fromUnit("min"), s.baseDims, 60);
+  ctx = ctx.addType("min", min).addValue("min", min).addType("_min", new v.DimType(min));
+
+  const h = new v.DimConstructor(v.Dimensions.fromUnit("h"), s.baseDims, 3600);
+  ctx = ctx.addType("h", h).addValue("h", h).addType("_h", new v.DimType(h));
+}
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -85,7 +88,7 @@ rl.on("line", (input) => {
       const expr = parser.parseExpression(input);
       const typed = typecheck.inferTypesInExpression(ctx, expr);
       const evaluated = interpreter.evaluateExpression(ctx, typed);
-      const valueOutput = printer.printExpression(evaluated.meta.value.toExpression());
+      const valueOutput = printer.printExpression(evaluated.toExpression());
       console.log(valueOutput);
       return;
     }
