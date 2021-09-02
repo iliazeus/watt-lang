@@ -70,25 +70,25 @@ rl.on("line", (input) => {
 
     if (command === ".parens") {
       const expr = parser.parseExpression(input);
-      const parens = util.parenthesizeExpression(expr);
-      const output = printer.printExpression(parens);
+      const parens = util.parenthesize(expr);
+      const output = printer.print(parens);
       console.log(output);
       return;
     }
 
     if (command === ".type") {
       const expr = parser.parseExpression(input);
-      const typed = typecheck.inferTypesInExpression(ctx, expr);
-      const typeOutput = printer.printExpression(typed.meta.type.toTypeExpression());
+      const typed = typecheck.inferTypes(ctx, expr);
+      const typeOutput = printer.print(typed.meta.type.toTypeExpression());
       console.log(typeOutput);
       return;
     }
 
     if (command == ".eval") {
       const expr = parser.parseExpression(input);
-      const typed = typecheck.inferTypesInExpression(ctx, expr);
-      const evaluated = interpreter.evaluateExpression(ctx, typed);
-      const valueOutput = printer.printExpression(evaluated.toExpression());
+      const typed = typecheck.inferTypes(ctx, expr);
+      const evaluated = interpreter.evaluate(ctx, typed);
+      const valueOutput = printer.print(evaluated.toExpression());
       console.log(valueOutput);
       return;
     }

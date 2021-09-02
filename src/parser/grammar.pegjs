@@ -1,8 +1,10 @@
 {
-  const factory = require("../factory");
+  const ast = require("../ast");
 }
 
-Start_Expression = _ expr:Expression _ { return expr }
+Start_Expression
+  = _ expr:Expression _
+    { return expr }
 
 Expression
   = Expression_1
@@ -45,81 +47,81 @@ Expression_9
 
 Expression_10
   = Literal
-  / TypeLiteral
+  / SpecialLiteral
   / Identifier
   / Parentheses
 
 Identifier
   = name:ID
-    { return factory.makeIdentifier(name, location()) }
+    { return ast.makeIdentifier(name, { location: location() }) }
 
 Literal
   = value:BOOL
-    { return factory.makeLiteral(JSON.parse(value), location()) }
+    { return ast.makeLiteral(JSON.parse(value), { location: location() }) }
   / value:NUM
-    { return factory.makeLiteral(JSON.parse(value), location()) }
+    { return ast.makeLiteral(JSON.parse(value), { location: location() }) }
 
-TypeLiteral
-  = ("boolean" / "scalar")
-    { return factory.makeTypeLiteral(text(), location()) }
+SpecialLiteral
+  = name:$("boolean" / "scalar")
+    { return ast.makeSpecialLiteral(name, { location: location() }) }
 
 Parentheses
   = "(" _ expr:Expression _ ")"
-    { return factory.makeParentheses(expr, location()) }
+    { return ast.makeParentheses(expr, { location: location() }) }
 
 PrefixExpression
   = op:PrefixOperator _ expr:Expression
-    { return factory.makePrefixExpression(op, expr, location()) }
+    { return ast.makePrefixExpression(op, expr, { location: location() }) }
 
 PrefixOperator
   = "!" / "+" / "-"
 
 PowerExpression
   = expr:Expression_10 _ "^" _ pow:INT
-    { return factory.makePowerExpression(expr, Number(pow), location()) }
+    { return ast.makePowerExpression(expr, JSON.parse(pow), { location: location() }) }
 
 BinaryExpression_6
   = left:Expression_7 _ op:BinaryOperator_6 _ right:Expression_6
-    { return factory.makeBinaryExpression(left, op, right, location()) }
+    { return ast.makeBinaryExpression(left, op, right, { location: location() }) }
 
 BinaryOperator_6
   = "*" / "/" / "%"
 
 BinaryExpression_5
   = left:Expression_6 _ op:BinaryOperator_5 _ right:Expression_5
-    { return factory.makeBinaryExpression(left, op, right, location()) }
+    { return ast.makeBinaryExpression(left, op, right, { location: location() }) }
 
 BinaryOperator_5
   = "-" / "+"
 
 BinaryExpression_3
   = left:Expression_5 _ op:BinaryOperator_3 _ right:Expression_3
-    { return factory.makeBinaryExpression(left, op, right, location()) }
+    { return ast.makeBinaryExpression(left, op, right, { location: location() }) }
 
 BinaryOperator_3
   = "==" / "!=" / "<=" / ">=" / "<" / ">"
 
 LogicalExpression_2
   = left:Expression_5 _ op:LogicalOperator_2 _ right:Expression_2
-    { return factory.makeLogicalExpression(left, op, right, location()) }
+    { return ast.makeLogicalExpression(left, op, right, { location: location() }) }
 
 LogicalOperator_2
   = "&&"
 
 LogicalExpression_1
   = left:Expression_2 _ op:LogicalOperator_1 _ right:Expression_1
-    { return factory.makeLogicalExpression(left, op, right, location()) }
+    { return ast.makeLogicalExpression(left, op, right, { location: location() }) }
 
 LogicalOperator_1
   = "||"
 
 AscriptionExpression
   = left:Expression_10 __ right:Expression_10
-    { return factory.makeAscriptionExpression(left, right, location()) }
+    { return ast.makeAscriptionExpression(left, right, { location: location() }) }
 
 ConversionExpression
   = left:Expression_5 __ "as" __ right:Expression_4
-    { return factory.makeConversionExpression(left, right, location()) }
+    { return ast.makeConversionExpression(left, right, { location: location() }) }
 
 INT "integer literal" = $([-+]? [0-9]+)
 NUM "numeric literal" = $([-+]? (([0-9]+([.][0-9]*)?) / ([.][0-9]+)) ([eE][-+]?[0-9]+)?)

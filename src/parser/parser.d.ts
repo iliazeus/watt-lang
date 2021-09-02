@@ -1,8 +1,8 @@
 import * as pegjs from "pegjs";
 
-import { Expression } from "../ast";
+import * as ast from "../ast";
 
 export function parse(
   input: string,
   options: { startRule: "Start_Expression" }
-): Expression<pegjs.LocationRange>;
+): ast.Expression<ast.LocationMeta>;

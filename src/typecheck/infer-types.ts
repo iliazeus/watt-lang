@@ -1,22 +1,19 @@
 import * as ast from "../ast";
-import * as t from "../traverse";
 import * as v from "../value";
 
-import { Location } from "../util/location";
-
-import { TypeError } from "./base";
+import { TypeError } from "./error";
 
 export type TypeAnnotation = { type: v.Value };
 
-export function inferTypesInExpression<TMeta extends Location>(
+export function inferTypes<TMeta extends ast.LocationMeta>(
   context: v.Context,
   expr: ast.Expression<TMeta>
 ): ast.Expression<TMeta & TypeAnnotation> {
-  const expr1 = t.mapChildExpressions(expr, (e) => inferTypesInExpression(context, e));
-  return t.annotateExpression(expr1, { type: lift(context, expr1) });
+  const expr1 = ast.mapChildren(expr, (e) => inferTypes(context, e));
+  return ast.annotate(expr1, { type: lift(context, expr1) });
 }
 
-function lift<TMeta extends Location>(
+function lift<TMeta extends ast.LocationMeta>(
   context: v.Context,
   expr: ast.Expression<TMeta, TMeta & TypeAnnotation>
 ): v.Value {
@@ -26,7 +23,7 @@ function lift<TMeta extends Location>(
     switch (expr.type) {
       case "Identifier": {
         const type = context.types.get(expr.name);
-        if (type === undefined) throw TypeError.NameIsNotDefined(expr.meta, expr.name);
+        if (type === undefined) throw TypeError.NameIsNotDefined(expr, expr.name);
         return type;
       }
 
@@ -39,8 +36,8 @@ function lift<TMeta extends Location>(
         }
       }
 
-      case "TypeLiteral": {
-        switch (expr.value) {
+      case "SpecialLiteral": {
+        switch (expr.name) {
           case "boolean":
             return new v.BooleanConstructor();
           case "scalar":
@@ -49,7 +46,7 @@ function lift<TMeta extends Location>(
       }
 
       case "Parentheses": {
-        return typeOf(expr.body);
+        return typeOf(expr.argument);
       }
 
       case "PrefixExpression": {
@@ -59,19 +56,19 @@ function lift<TMeta extends Location>(
           case "!":
             if (argtype instanceof v.BooleanValue) return new v.BooleanValue(!argtype.value);
             if (argtype instanceof v.BooleanType) return argtype;
-            throw TypeError.NotABoolean(expr.argument.meta, argtype);
+            throw TypeError.NotABoolean(expr.argument, argtype);
 
           case "+":
             if (argtype instanceof v.DimValue) return argtype;
             if (argtype instanceof v.DimType) return argtype;
             if (argtype instanceof v.DimConstructor) return argtype;
-            throw TypeError.NotANumberOrUnit(expr.argument.meta, argtype);
+            throw TypeError.NotANumberOrUnit(expr.argument, argtype);
 
           case "-":
             if (argtype instanceof v.DimValue) return argtype.negate();
             if (argtype instanceof v.DimType) return argtype;
             if (argtype instanceof v.DimConstructor) return argtype;
-            throw TypeError.NotANumberOrUnit(expr.argument.meta, argtype);
+            throw TypeError.NotANumberOrUnit(expr.argument, argtype);
         }
       }
 
@@ -82,7 +79,7 @@ function lift<TMeta extends Location>(
         if (argtype instanceof v.DimType) return argtype.power(expr.power);
         if (argtype instanceof v.DimConstructor) return argtype.power(expr.power);
 
-        throw TypeError.NotANumberOrUnit(expr.argument.meta, argtype);
+        throw TypeError.NotANumberOrUnit(expr.argument, argtype);
       }
 
       case "BinaryExpression": {
@@ -99,55 +96,55 @@ function lift<TMeta extends Location>(
 
             case "%":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
-              if (!left.isScalar) throw TypeError.NotAScalar(expr.left.meta, left);
-              if (!right.isScalar) throw TypeError.NotAScalar(expr.right.meta, right);
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
+              if (!left.isScalar) throw TypeError.NotAScalar(expr.left, left);
+              if (!right.isScalar) throw TypeError.NotAScalar(expr.right, right);
               return left.modulo(right);
 
             case "+":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return left.plus(right);
 
             case "-":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return left.minus(right);
 
             case "==":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(left.equals(right));
 
             case "!=":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(!left.equals(right));
 
             case "<=":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(left.compareTo(right) <= 0);
 
             case ">=":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(left.compareTo(right) >= 0);
 
             case "<":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(left.compareTo(right) < 0);
 
             case ">":
               if (!left.cons.equals(right.cons))
-                throw TypeError.TypeMismatch(expr.meta, left.getType(), right.getType());
+                throw TypeError.TypeMismatch(expr, left.getType(), right.getType());
               return new v.BooleanValue(left.compareTo(right) > 0);
           }
         }
 
         if (left instanceof v.DimValue && right instanceof v.DimConstructor) {
-          if (!left.isScalar) throw TypeError.NotAScalar(expr.left.meta, left);
+          if (!left.isScalar) throw TypeError.NotAScalar(expr.left, left);
 
           switch (expr.operator) {
             case "*":
@@ -161,12 +158,12 @@ function lift<TMeta extends Location>(
               );
 
             default:
-              throw TypeError.TypeMismatch(expr.meta, left, right);
+              throw TypeError.TypeMismatch(expr, left, right);
           }
         }
 
         if (left instanceof v.DimConstructor && right instanceof v.DimValue) {
-          if (!right.isScalar) throw TypeError.NotAScalar(expr.right.meta, right);
+          if (!right.isScalar) throw TypeError.NotAScalar(expr.right, right);
 
           switch (expr.operator) {
             case "*":
@@ -176,7 +173,7 @@ function lift<TMeta extends Location>(
               return new v.DimConstructor(left.dims, left.baseDims, left.factor / right.value);
 
             default:
-              throw TypeError.TypeMismatch(expr.meta, left, right);
+              throw TypeError.TypeMismatch(expr, left, right);
           }
         }
 
@@ -192,14 +189,14 @@ function lift<TMeta extends Location>(
               return left.divide(right);
 
             case "%":
-              if (!left.equals(right)) throw TypeError.TypeMismatch(expr.meta, left, right);
-              if (!left.isScalar) throw TypeError.NotAScalar(expr.left.meta, left);
-              if (!right.isScalar) throw TypeError.NotAScalar(expr.right.meta, right);
+              if (!left.equals(right)) throw TypeError.TypeMismatch(expr, left, right);
+              if (!left.isScalar) throw TypeError.NotAScalar(expr.left, left);
+              if (!right.isScalar) throw TypeError.NotAScalar(expr.right, right);
               return left;
 
             case "+":
             case "-":
-              if (!left.equals(right)) throw TypeError.TypeMismatch(expr.meta, left, right);
+              if (!left.equals(right)) throw TypeError.TypeMismatch(expr, left, right);
               return left;
 
             case "==":
@@ -208,7 +205,7 @@ function lift<TMeta extends Location>(
             case ">=":
             case "<":
             case ">":
-              if (!left.equals(right)) throw TypeError.TypeMismatch(expr.meta, left, right);
+              if (!left.equals(right)) throw TypeError.TypeMismatch(expr, left, right);
               return new v.BooleanType();
           }
         }
@@ -220,11 +217,11 @@ function lift<TMeta extends Location>(
             case "/":
               return left.divide(right);
             default:
-              throw TypeError.OperationIsNotDefinedForTypes(expr.meta, expr.operator, left, right);
+              throw TypeError.OperationIsNotDefinedForTypes(expr, expr.operator, left, right);
           }
         }
 
-        throw TypeError.OperationIsNotDefinedForTypes(expr.meta, expr.operator, left, right);
+        throw TypeError.OperationIsNotDefinedForTypes(expr, expr.operator, left, right);
       }
 
       case "LogicalExpression": {
@@ -243,8 +240,8 @@ function lift<TMeta extends Location>(
         if (left instanceof v.BooleanValue) left = new v.BooleanType();
         if (right instanceof v.BooleanValue) right = new v.BooleanType();
 
-        if (!(left instanceof v.BooleanType)) throw TypeError.NotABoolean(expr.left.meta, left);
-        if (!(right instanceof v.BooleanType)) throw TypeError.NotABoolean(expr.right.meta, right);
+        if (!(left instanceof v.BooleanType)) throw TypeError.NotABoolean(expr.left, left);
+        if (!(right instanceof v.BooleanType)) throw TypeError.NotABoolean(expr.right, right);
 
         return left;
       }
@@ -254,15 +251,15 @@ function lift<TMeta extends Location>(
         let right = typeOf(expr.right);
 
         if (left instanceof v.DimValue && right instanceof v.DimConstructor) {
-          if (!left.isScalar) throw TypeError.NotAScalar(expr.left.meta, left);
+          if (!left.isScalar) throw TypeError.NotAScalar(expr.left, left);
           return left.ascribe(right);
         }
 
         if (left instanceof v.DimValue) left = new v.DimType(left.cons);
 
         if (!(left instanceof v.DimType && left.isScalar))
-          throw TypeError.NotAScalar(expr.left.meta, left);
-        if (!(right instanceof v.DimConstructor)) throw TypeError.NotAUnit(expr.right.meta, right);
+          throw TypeError.NotAScalar(expr.left, left);
+        if (!(right instanceof v.DimConstructor)) throw TypeError.NotAUnit(expr.right, right);
 
         return new v.DimType(right);
       }
@@ -273,7 +270,7 @@ function lift<TMeta extends Location>(
 
         if (left instanceof v.DimValue && right instanceof v.DimConstructor) {
           if (!left.cons.baseDims.equals(right.baseDims)) {
-            throw TypeError.BaseDimensionsMustMatch(expr.meta, left, right);
+            throw TypeError.BaseDimensionsMustMatch(expr, left, right);
           }
 
           return left.convertTo(right);
@@ -281,11 +278,11 @@ function lift<TMeta extends Location>(
 
         if (left instanceof v.DimValue) left = new v.DimType(left.cons);
 
-        if (!(left instanceof v.DimType)) throw TypeError.NotANumber(expr.left.meta, left);
-        if (!(right instanceof v.DimConstructor)) throw TypeError.NotAUnit(expr.right.meta, right);
+        if (!(left instanceof v.DimType)) throw TypeError.NotANumber(expr.left, left);
+        if (!(right instanceof v.DimConstructor)) throw TypeError.NotAUnit(expr.right, right);
 
         if (!left.cons.baseDims.equals(right.baseDims)) {
-          throw TypeError.BaseDimensionsMustMatch(expr.meta, left, right);
+          throw TypeError.BaseDimensionsMustMatch(expr, left, right);
         }
 
         return new v.DimType(right);
@@ -293,6 +290,6 @@ function lift<TMeta extends Location>(
     }
   } catch (error) {
     if (error instanceof TypeError) throw error;
-    throw TypeError.from(expr.meta, error);
+    throw TypeError.from(expr, error);
   }
 }

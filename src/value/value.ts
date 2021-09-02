@@ -1,5 +1,4 @@
 import * as ast from "../ast";
-import * as factory from "../factory";
 
 import { Dimensions } from "./dimensions";
 
@@ -27,7 +26,7 @@ export class BooleanValue {
   constructor(readonly value: boolean) {}
 
   toExpression(): ast.Literal<{}> {
-    return factory.makeLiteral(this.value, {});
+    return ast.makeLiteral(this.value, {});
   }
 
   toTypeExpression(): ast.Literal<{}> {
@@ -48,8 +47,8 @@ export class BooleanType {
     throw new UndefinedOperationError();
   }
 
-  toTypeExpression(): ast.TypeLiteral<{}> {
-    return factory.makeTypeLiteral("boolean", {});
+  toTypeExpression(): ast.SpecialLiteral<{}> {
+    return ast.makeSpecialLiteral("boolean", {});
   }
 
   getType(): never {
@@ -62,16 +61,12 @@ export class BooleanType {
 }
 
 export class BooleanConstructor {
-  toExpression(): ast.TypeLiteral<{}> {
-    return factory.makeTypeLiteral("boolean", {});
+  toExpression(): ast.SpecialLiteral<{}> {
+    return ast.makeSpecialLiteral("boolean", {});
   }
 
   toTypeExpression(): ast.Expression<{}> {
-    return factory.makeAscriptionExpression(
-      factory.makeIdentifier("type", {}),
-      this.toExpression(),
-      {}
-    );
+    return ast.makeAscriptionExpression(ast.makeIdentifier("type", {}), this.toExpression(), {});
   }
 
   getType(): BooleanConstructor {
@@ -91,11 +86,11 @@ export class DimValue {
   }
 
   toExpression(): ast.Expression<{}> {
-    if (this.isScalar && this.cons.factor === 1) return factory.makeLiteral(this.value, {});
+    if (this.isScalar && this.cons.factor === 1) return ast.makeLiteral(this.value, {});
 
-    return factory.makeAscriptionExpression(
-      factory.makeLiteral(this.value, {}),
-      factory.makeParentheses(this.cons.toExpression(), {}),
+    return ast.makeAscriptionExpression(
+      ast.makeLiteral(this.value, {}),
+      ast.makeParentheses(this.cons.toExpression(), {}),
       {}
     );
   }
@@ -223,30 +218,26 @@ export class DimConstructor {
     let result: ast.Expression<{}>;
 
     if (this.isScalar) {
-      result = factory.makeTypeLiteral("scalar", {});
+      result = ast.makeSpecialLiteral("scalar", {});
     } else {
       result = [...this.dims.map]
         .map<ast.Expression<{}>>(([k, v]) => {
-          const id = factory.makeIdentifier(k, {});
+          const id = ast.makeIdentifier(k, {});
           if (v === 1) return id;
-          return factory.makePowerExpression(id, v, {});
+          return ast.makePowerExpression(id, v, {});
         })
-        .reduce((l, r) => factory.makeBinaryExpression(l, "*", r, {}));
+        .reduce((l, r) => ast.makeBinaryExpression(l, "*", r, {}));
     }
 
     if (this.dims.equals(this.baseDims) && this.factor !== 1) {
-      result = factory.makeBinaryExpression(factory.makeLiteral(this.factor, {}), "*", result, {});
+      result = ast.makeBinaryExpression(ast.makeLiteral(this.factor, {}), "*", result, {});
     }
 
     return result;
   }
 
   toTypeExpression(): ast.Expression<{}> {
-    return factory.makeAscriptionExpression(
-      factory.makeIdentifier("unit", {}),
-      this.toExpression(),
-      {}
-    );
+    return ast.makeAscriptionExpression(ast.makeIdentifier("unit", {}), this.toExpression(), {});
   }
 
   getType(): DimConstructor {
