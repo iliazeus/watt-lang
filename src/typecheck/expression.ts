@@ -288,7 +288,7 @@ function lift<TMeta extends Location>(
           throw TypeError.BaseDimensionsMustMatch(expr.meta, left, right);
         }
 
-        return right;
+        return new v.DimType(right);
       }
     }
   } catch (error) {
