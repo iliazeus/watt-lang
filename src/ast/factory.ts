@@ -11,6 +11,15 @@ export function makeBlockStatement<M, MM = M>(
   return { type: "BlockStatement", body, meta };
 }
 
+export function makeVarStatement<M, MM = M>(
+  name: string,
+  annotation: ast.Expression<MM> | null,
+  value: ast.Expression<MM>,
+  meta: M
+): ast.VarStatement<M, MM> {
+  return { type: "VarStatement", name, annotation, value, meta };
+}
+
 export function makeUnitStatement<M, MM = M>(
   name: string,
   expression: ast.Expression<MM>,

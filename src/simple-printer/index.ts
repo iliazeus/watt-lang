@@ -5,6 +5,12 @@ export function print(node: ast.Node<unknown>): string {
     case "EmptyStatement":
       return `;`;
 
+    case "VarStatement":
+      if (!node.annotation && !node.value) return `var ${node.name};`;
+      if (!node.annotation) return `var ${node.name} = ${print(node.value!)};`;
+      if (!node.value) return `var ${node.name}: ${print(node.annotation)};`;
+      return `var ${node.name}: ${print(node.annotation)} = ${print(node.value)};`;
+
     case "UnitStatement":
       if (!node.expression) return `unit ${node.name};`;
       return `unit ${node.name} = ${print(node.expression)};`;

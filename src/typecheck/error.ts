@@ -65,4 +65,11 @@ export class TypeError extends Error {
       `'${op}' is not defined for types '${show(left)}' and '${show(right)}'`
     );
   }
+
+  static VarMustHaveTypeOrValue(node: ast.Node<ast.LocationMeta>): TypeError {
+    return new TypeError(
+      node.meta.location,
+      `'var' bindings must either have a type annotation, or an initial value`
+    );
+  }
 }

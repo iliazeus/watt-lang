@@ -35,6 +35,10 @@ export class UnitValue {
   getType(): UnitValue {
     return this;
   }
+
+  isSubtypeOf(other: Value): boolean {
+    return other instanceof UnitValue;
+  }
 }
 
 export class BooleanValue {
@@ -50,6 +54,10 @@ export class BooleanValue {
 
   getType(): BooleanValue {
     return this;
+  }
+
+  isSubtypeOf(other: Value): boolean {
+    return (other instanceof BooleanValue && other.equals(this)) || other instanceof BooleanType;
   }
 
   equals(other: BooleanValue): boolean {

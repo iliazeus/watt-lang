@@ -34,6 +34,36 @@ export function inferTypes<M extends ast.LocationMeta>(
         return new v.UnitValue();
       }
 
+      case "VarStatement": {
+        if (node.annotation) {
+          let anntype = inferType(node.annotation);
+
+          if (anntype instanceof v.BooleanConstructor) anntype = new v.BooleanType();
+          if (anntype instanceof v.DimConstructor) anntype = new v.DimType(anntype);
+
+          const valtype = node.value && inferType(node.value);
+
+          if (valtype && !valtype.isSubtypeOf(anntype)) {
+            throw TypeError.TypeMismatch(node, anntype, valtype);
+          }
+
+          context = context.addType(node.name, anntype);
+          return anntype;
+        }
+
+        if (node.value) {
+          let valtype = inferType(node.value);
+
+          if (valtype instanceof v.BooleanValue) valtype = new v.BooleanType();
+          if (valtype instanceof v.DimValue) valtype = new v.DimType(valtype.cons);
+
+          context = context.addType(node.name, valtype);
+          return valtype;
+        }
+
+        throw TypeError.VarMustHaveTypeOrValue(node);
+      }
+
       case "UnitStatement": {
         if (!node.expression) {
           const type = new v.DimConstructor(v.Dimensions.fromUnit(node.name));

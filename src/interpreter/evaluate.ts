@@ -30,6 +30,12 @@ export function evaluate<M extends ast.LocationMeta>(
         return new v.UnitValue();
       }
 
+      case "VarStatement": {
+        const value = evaluate(node.value);
+        context = context.addValue(node.name, value);
+        return value;
+      }
+
       case "UnitStatement": {
         if (!node.expression) {
           const value = new v.DimConstructor(v.Dimensions.fromUnit(node.name));

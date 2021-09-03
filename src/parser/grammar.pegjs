@@ -17,9 +17,16 @@ Start_Expression
 ReplStatement
   = EmptyStatement
   / BlockStatement
+  / ReplVarStatement
   / ReplUnitStatement
   / ReplLetStatement
   / ReplExpressionStatement
+
+ReplVarStatement
+  = "var" __ name:ID _ ":" _ ann:Expression _ "=" _ val:Expression
+    { return ast.makeVarStatement(name, ann, val, { location: location() }) }
+  / "var" __ name:ID _ "=" _ val:Expression
+    { return ast.makeVarStatement(name, null, val, { location: location() }) }
 
 ReplUnitStatement
   = "unit" __ name:ID _ "=" _ expr:Expression
@@ -38,6 +45,7 @@ ReplExpressionStatement
 Statement
   = EmptyStatement
   / BlockStatement
+  / VarStatement
   / UnitStatement
   / LetStatement
   / ExpressionStatement
@@ -59,6 +67,12 @@ BlockStatement
     { return ast.makeBlockStatement([], { location: location() }) }
   / "{" _ body:StatementList _ "}"
     { return ast.makeBlockStatement(body, { location: location() }) }
+
+VarStatement
+  = "var" __ name:ID _ ":" _ ann:Expression _ "=" _ val:Expression _ ";"
+    { return ast.makeVarStatement(name, ann, val, { location: location() }) }
+  / "var" __ name:ID _ "=" _ val:Expression _ ";"
+    { return ast.makeVarStatement(name, null, val, { location: location() }) }
 
 UnitStatement
   = "unit" __ name:ID _ "=" _ expr:Expression _ ";"
