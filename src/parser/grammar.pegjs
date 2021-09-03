@@ -2,9 +2,60 @@
   const ast = require("../ast");
 }
 
+Start_ReplStatement
+  = _ stmt:ReplStatement _ (";" _)?
+    { return stmt }
+
+Start_Statement
+  = _ stmt:Statement _
+    { return stmt }
+
 Start_Expression
   = _ expr:Expression _
     { return expr }
+
+ReplStatement
+  = BlockStatement
+  / ReplLetStatement
+  / ReplExpressionStatement
+
+ReplLetStatement
+  = "let" __ name:ID _ "=" _ expr:Expression
+    { return ast.makeLetStatement(name, expr, { location: location() }) }
+
+ReplExpressionStatement
+  = expr:Expression
+    { return ast.makeExpressionStatement(expr, { location: location() }) }
+
+Statement
+  = EmptyStatement
+  / BlockStatement
+  / LetStatement
+  / ExpressionStatement
+
+StatementList
+  = head:Statement _ tail:StatementList
+    { return [head, ...tail] }
+  / stmt:Statement
+    { return [stmt] }
+
+EmptyStatement
+  = ";"
+    { return ast.makeEmptyStatement({ location: location() }) }
+
+BlockStatement
+  = "{" _ "}"
+    { return ast.makeBlockStatement([], { location: location() }) }
+  / "{" _ body:StatementList _ "}"
+    { return ast.makeBlockStatement(body, { location: location() }) }
+
+LetStatement
+  = "let" __ name:ID _ "=" _ expr:Expression _ ";"
+    { return ast.makeLetStatement(name, expr, { location: location() }) }
+
+ExpressionStatement
+  = expr:Expression _ ";"
+    { return ast.makeExpressionStatement(expr, { location: location() }) }
 
 Expression
   = Expression_1

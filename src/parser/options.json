@@ -1,5 +1,5 @@
 {
-  "allowedStartRules": ["Start_Expression"],
+  "allowedStartRules": ["Start_ReplStatement", "Start_Statement", "Start_Expression"],
   "format": "commonjs",
   "optimize": "speed"
 }

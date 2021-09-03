@@ -1,5 +1,31 @@
 import * as ast from "./ast";
 
+export function makeEmptyStatement<M>(meta: M): ast.EmptyStatement<M> {
+  return { type: "EmptyStatement", meta };
+}
+
+export function makeBlockStatement<M, MM = M>(
+  body: ast.Statement<MM>[],
+  meta: M
+): ast.BlockStatement<M, MM> {
+  return { type: "BlockStatement", body, meta };
+}
+
+export function makeLetStatement<M, MM = M>(
+  name: string,
+  expression: ast.Expression<MM>,
+  meta: M
+): ast.LetStatement<M, MM> {
+  return { type: "LetStatement", name, expression, meta };
+}
+
+export function makeExpressionStatement<M, MM = M>(
+  expression: ast.Expression<MM>,
+  meta: M
+): ast.ExpressionStatement<M, MM> {
+  return { type: "ExpressionStatement", expression, meta };
+}
+
 export function makeUnit<M>(meta: M): ast.Unit<M> {
   return { type: "Unit", meta };
 }

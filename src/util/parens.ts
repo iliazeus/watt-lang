@@ -1,7 +1,5 @@
 import * as ast from "../ast";
 
-export function parenthesize<M>(expr: ast.Expression<M>): ast.Expression<M>;
-
 export function parenthesize<M>(node: ast.Node<M>): ast.Node<M> {
   node = stripParentheses(node);
 
@@ -21,10 +19,8 @@ export function parenthesize<M>(node: ast.Node<M>): ast.Node<M> {
   return node;
 }
 
-export function stripParentheses<M>(expr: ast.Expression<M>): ast.Expression<M>;
-
 export function stripParentheses<M>(node: ast.Node<M>): ast.Node<M> {
-  node = ast.mapChildren(node, stripParentheses);
-  if (node.type === "Parentheses") node = node.argument;
-  return node;
+  const node1 = ast.mapChildren(node, stripParentheses);
+  if (node1.type === "Parentheses") return node1.argument;
+  return node1;
 }

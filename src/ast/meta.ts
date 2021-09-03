@@ -1,15 +1,11 @@
 import * as ast from "./ast";
 
+export function annotate<M, A, MM>(stmt: ast.Statement<M, MM>, meta: A): ast.Statement<M & A, MM>;
+export function annotate<M, A, MM>(expr: ast.Expression<M, MM>, meta: A): ast.Expression<M & A, MM>;
+export function annotate<M, A, MM>(node: ast.Node<M, MM>, meta: A): ast.Node<M & A, MM>;
+
 export function annotate<M, A, MM>(node: ast.Node<M, MM>, meta: A): ast.Node<M & A, MM> {
   return { ...node, meta: { ...node.meta, ...meta } };
-}
-
-export function eraseAnnotation<M, K extends keyof M, MM>(
-  node: ast.Node<M, MM>,
-  key: K
-): ast.Node<Omit<M, K>, MM> {
-  const { [key]: value, ...meta } = node.meta;
-  return { ...node, meta };
 }
 
 export type LocationMeta = { location: Location };

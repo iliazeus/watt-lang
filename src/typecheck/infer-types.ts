@@ -8,9 +8,9 @@ export type TypeMeta = { type: v.Value };
 export function inferTypes<M extends ast.LocationMeta>(
   context: v.Context,
   node: ast.Node<M>
-): ast.Node<M & TypeMeta> {
+): [ast.Node<M & TypeMeta>, v.Context] {
   recurse(node);
-  return node as ast.Node<M & TypeMeta>;
+  return [node as ast.Node<M & TypeMeta>, context];
 
   function recurse(node: ast.Node<M>): v.Value {
     try {
@@ -25,6 +25,25 @@ export function inferTypes<M extends ast.LocationMeta>(
 
   function inferType(node: ast.Node<M>, inferType: typeof recurse): v.Value {
     switch (node.type) {
+      case "EmptyStatement": {
+        return new v.UnitValue();
+      }
+
+      case "BlockStatement": {
+        node.body.forEach(inferType);
+        return new v.UnitValue();
+      }
+
+      case "LetStatement": {
+        const type = inferType(node.expression);
+        context = context.addType(node.name, type);
+        return type;
+      }
+
+      case "ExpressionStatement": {
+        return inferType(node.expression);
+      }
+
       case "Unit": {
         return new v.UnitValue();
       }

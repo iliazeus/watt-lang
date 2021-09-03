@@ -1,14 +1,18 @@
 import * as ast from "./ast";
-
-export function forEachChild<M>(
-  expr: ast.Expression<M>,
-  fn: (child: ast.Expression<M>) => void
-): ast.Expression<M>;
-
-export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => void): ast.Node<M>;
+import { isExpression, isStatement } from "./is";
 
 export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => void): ast.Node<M> {
   switch (node.type) {
+    case "EmptyStatement":
+      return node;
+
+    case "BlockStatement":
+      return node.body.forEach(fn), node;
+
+    case "LetStatement":
+    case "ExpressionStatement":
+      return fn(node.expression), node;
+
     case "Unit":
     case "Identifier":
     case "Literal":
@@ -28,21 +32,31 @@ export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => v
   }
 }
 
-export function mapChildren<M, MM>(
-  expr: ast.Expression<M>,
-  fn: (child: ast.Expression<M>) => ast.Expression<MM>
-): ast.Expression<M, MM>;
+function assert(cond: boolean): asserts cond {
+  if (!cond) throw new Error("assertion error");
+}
 
 export function mapChildren<M, MM>(
   node: ast.Node<M>,
-  fn: (child: ast.Node<M>) => ast.Node<MM>
-): ast.Node<M, MM>;
-
-export function mapChildren<M, MM>(
-  node: ast.Node<M>,
-  fn: (child: ast.Node<M>) => ast.Node<MM>
+  fn: (node: ast.Node<M>) => ast.Node<MM>
 ): ast.Node<M, MM> {
   switch (node.type) {
+    case "EmptyStatement":
+      return node;
+
+    case "BlockStatement": {
+      const body = node.body.map(fn);
+      assert(body.every(isStatement));
+      return { ...node, body };
+    }
+
+    case "LetStatement":
+    case "ExpressionStatement": {
+      const expression = fn(node.expression);
+      assert(isExpression(expression));
+      return { ...node, expression };
+    }
+
     case "Unit":
     case "Identifier":
     case "Literal":
@@ -51,13 +65,20 @@ export function mapChildren<M, MM>(
 
     case "Parentheses":
     case "PrefixExpression":
-    case "PowerExpression":
-      return { ...node, argument: fn(node.argument) };
+    case "PowerExpression": {
+      const argument = fn(node.argument);
+      assert(isExpression(argument));
+      return { ...node, argument };
+    }
 
     case "BinaryExpression":
     case "LogicalExpression":
     case "AscriptionExpression":
-    case "ConversionExpression":
-      return { ...node, left: fn(node.left), right: fn(node.right) };
+    case "ConversionExpression": {
+      const left = fn(node.left),
+        right = fn(node.right);
+      assert(isExpression(left) && isExpression(right));
+      return { ...node, left, right };
+    }
   }
 }

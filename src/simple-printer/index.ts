@@ -2,6 +2,18 @@ import * as ast from "../ast";
 
 export function print(node: ast.Node<unknown>): string {
   switch (node.type) {
+    case "EmptyStatement":
+      return `;`;
+
+    case "BlockStatement":
+      return `{\n${node.body.map((s) => `  ${print(s)}`)}\n}`;
+
+    case "LetStatement":
+      return `let ${node.name} = ${print(node.expression)};`;
+
+    case "ExpressionStatement":
+      return `${print(node.expression)};`;
+
     case "Unit":
       return `()`;
 

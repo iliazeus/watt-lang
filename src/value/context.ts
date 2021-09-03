@@ -24,7 +24,19 @@ export class Context {
     return new Context(this.types, this.values.add(name, value));
   }
 
+  setType(name: string, value: Value): void {
+    this.types.set(name, value);
+  }
+
   setValue(name: string, value: Value): void {
     this.values.set(name, value);
+  }
+
+  deleteType(name: string): Context {
+    return new Context(this.types.delete(name), this.values);
+  }
+
+  deleteValue(name: string): Context {
+    return new Context(this.types, this.values.delete(name));
   }
 }

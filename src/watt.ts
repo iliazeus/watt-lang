@@ -37,7 +37,7 @@ rl.on("line", (input) => {
     if (input.match(/^\s*$/)) return;
 
     const match = input.match(/^\s*([.]\w+)\s*(.*)/);
-    const command = match?.[1] ?? ".eval";
+    const command = match?.[1];
     input = match?.[2] ?? input;
 
     if (command === ".help") {
@@ -47,7 +47,7 @@ rl.on("line", (input) => {
       console.log(".ast <expr>     show the AST");
       console.log(".parens <epxr>  fully parenthesize an expression");
       console.log(".type <expr>    show type of expression");
-      console.log(".eval <expr>    evaluate an expression");
+      console.log(".undef <name>   remove the binding");
       return;
     }
 
@@ -78,18 +78,26 @@ rl.on("line", (input) => {
 
     if (command === ".type") {
       const expr = parser.parseExpression(input);
-      const typed = typecheck.inferTypes(ctx, expr);
-      const typeOutput = printer.print(typed.meta.type.toTypeExpression());
-      console.log(typeOutput);
+      const [typed, typectx] = typecheck.inferTypes(ctx, expr);
+      ctx = typectx;
+      const output = printer.print(typed.meta.type.toTypeExpression());
+      console.log(output);
       return;
     }
 
-    if (command == ".eval") {
-      const expr = parser.parseExpression(input);
-      const typed = typecheck.inferTypes(ctx, expr);
-      const evaluated = interpreter.evaluate(ctx, typed);
-      const valueOutput = printer.print(evaluated.toExpression());
-      console.log(valueOutput);
+    if (command === ".undef") {
+      const name = input.trim();
+      ctx = ctx.deleteType(name).deleteValue(name);
+      return;
+    }
+
+    if (command === undefined) {
+      const stmt = parser.parseReplStatement(input);
+      const [typed, typectx] = typecheck.inferTypes(ctx, stmt);
+      const [value, valuectx] = interpreter.evaluate(typectx, typed);
+      ctx = valuectx;
+      const output = printer.print(value.toExpression());
+      console.log(output);
       return;
     }
 

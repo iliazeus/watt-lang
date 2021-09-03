@@ -3,7 +3,33 @@ export interface BaseNode<M> {
   meta: M;
 }
 
-export type Node<M, MM = M> = Expression<M, MM>;
+export type Node<M, MM = M> = Statement<M, MM> | Expression<M, MM>;
+
+export type Statement<M, MM = M> =
+  | EmptyStatement<M>
+  | BlockStatement<M, MM>
+  | LetStatement<M, MM>
+  | ExpressionStatement<M, MM>;
+
+export interface EmptyStatement<M> extends BaseNode<M> {
+  type: "EmptyStatement";
+}
+
+export interface BlockStatement<M, MM> extends BaseNode<M> {
+  type: "BlockStatement";
+  body: Statement<MM>[];
+}
+
+export interface LetStatement<M, MM> extends BaseNode<M> {
+  type: "LetStatement";
+  name: string;
+  expression: Expression<MM>;
+}
+
+export interface ExpressionStatement<M, MM> extends BaseNode<M> {
+  type: "ExpressionStatement";
+  expression: Expression<MM>;
+}
 
 export type Expression<M, MM = M> =
   | Unit<M>

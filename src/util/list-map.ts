@@ -71,7 +71,7 @@ export namespace ListMap {
     }
 
     delete(key: K): Nil<K, V> | Cons<K, V> {
-      if (this.key === key) return this.next;
+      if (this.key === key) return this.next.delete(key);
       return new Cons(this.key, this.value, this.next.delete(key));
     }
 

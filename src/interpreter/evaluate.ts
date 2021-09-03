@@ -6,8 +6,9 @@ import { RuntimeError } from "./error";
 export function evaluate<M extends ast.LocationMeta>(
   context: v.Context,
   node: ast.Node<M>
-): v.Value {
-  return recurse(node);
+): [v.Value, v.Context] {
+  const value = recurse(node);
+  return [value, context];
 
   function recurse(node: ast.Node<M>): v.Value {
     try {
@@ -20,6 +21,25 @@ export function evaluate<M extends ast.LocationMeta>(
 
   function evaluate(node: ast.Node<M>, evaluate: typeof recurse): v.Value {
     switch (node.type) {
+      case "EmptyStatement": {
+        return new v.UnitValue();
+      }
+
+      case "BlockStatement": {
+        node.body.forEach(evaluate);
+        return new v.UnitValue();
+      }
+
+      case "LetStatement": {
+        const value = evaluate(node.expression);
+        context = context.addValue(node.name, value);
+        return value;
+      }
+
+      case "ExpressionStatement": {
+        return evaluate(node.expression);
+      }
+
       case "Unit": {
         return new v.UnitValue();
       }
