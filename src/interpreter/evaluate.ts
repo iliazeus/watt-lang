@@ -30,6 +30,37 @@ export function evaluate<M extends ast.LocationMeta>(
         return new v.UnitValue();
       }
 
+      case "UnitStatement": {
+        if (!node.expression) {
+          const value = new v.DimConstructor(v.Dimensions.fromUnit(node.name));
+          context = context.addValue(node.name, value);
+          return value;
+        }
+
+        let expvalue = evaluate(node.expression);
+
+        if (expvalue instanceof v.DimValue) {
+          expvalue = new v.DimConstructor(
+            expvalue.cons.dims,
+            expvalue.cons.baseDims,
+            expvalue.value * expvalue.cons.factor
+          );
+        }
+
+        if (!(expvalue instanceof v.DimConstructor)) {
+          throw RuntimeError.NotANumberOrAUnit(node, expvalue);
+        }
+
+        const value = new v.DimConstructor(
+          v.Dimensions.fromUnit(node.name),
+          expvalue.baseDims,
+          expvalue.factor
+        );
+
+        context = context.addValue(node.name, value);
+        return value;
+      }
+
       case "LetStatement": {
         const value = evaluate(node.expression);
         context = context.addValue(node.name, value);

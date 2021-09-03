@@ -9,9 +9,10 @@ export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => v
     case "BlockStatement":
       return node.body.forEach(fn), node;
 
+    case "UnitStatement":
     case "LetStatement":
     case "ExpressionStatement":
-      return fn(node.expression), node;
+      return node.expression && fn(node.expression), node;
 
     case "Unit":
     case "Identifier":
@@ -48,6 +49,13 @@ export function mapChildren<M, MM>(
       const body = node.body.map(fn);
       assert(body.every(isStatement));
       return { ...node, body };
+    }
+
+    case "UnitStatement": {
+      if (!node.expression) return { ...node, expression: null };
+      const expression = fn(node.expression);
+      assert(isExpression(expression));
+      return { ...node, expression };
     }
 
     case "LetStatement":

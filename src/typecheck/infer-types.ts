@@ -34,6 +34,37 @@ export function inferTypes<M extends ast.LocationMeta>(
         return new v.UnitValue();
       }
 
+      case "UnitStatement": {
+        if (!node.expression) {
+          const type = new v.DimConstructor(v.Dimensions.fromUnit(node.name));
+          context = context.addType(node.name, type);
+          return type;
+        }
+
+        let exptype = inferType(node.expression);
+
+        if (exptype instanceof v.DimValue) {
+          exptype = new v.DimConstructor(
+            exptype.cons.dims,
+            exptype.cons.baseDims,
+            exptype.value * exptype.cons.factor
+          );
+        }
+
+        if (!(exptype instanceof v.DimConstructor)) {
+          throw TypeError.NotANumberOrUnit(node, exptype);
+        }
+
+        const type = new v.DimConstructor(
+          v.Dimensions.fromUnit(node.name),
+          exptype.baseDims,
+          exptype.factor
+        );
+
+        context = context.addType(node.name, type);
+        return type;
+      }
+
       case "LetStatement": {
         const type = inferType(node.expression);
         context = context.addType(node.name, type);

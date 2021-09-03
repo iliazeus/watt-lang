@@ -8,6 +8,7 @@ export type Node<M, MM = M> = Statement<M, MM> | Expression<M, MM>;
 export type Statement<M, MM = M> =
   | EmptyStatement<M>
   | BlockStatement<M, MM>
+  | UnitStatement<M, MM>
   | LetStatement<M, MM>
   | ExpressionStatement<M, MM>;
 
@@ -18,6 +19,12 @@ export interface EmptyStatement<M> extends BaseNode<M> {
 export interface BlockStatement<M, MM> extends BaseNode<M> {
   type: "BlockStatement";
   body: Statement<MM>[];
+}
+
+export interface UnitStatement<M, MM> extends BaseNode<M> {
+  type: "UnitStatement";
+  name: string;
+  expression: Expression<MM> | null;
 }
 
 export interface LetStatement<M, MM> extends BaseNode<M> {

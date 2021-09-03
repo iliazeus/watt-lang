@@ -5,6 +5,10 @@ export function print(node: ast.Node<unknown>): string {
     case "EmptyStatement":
       return `;`;
 
+    case "UnitStatement":
+      if (!node.expression) return `unit ${node.name};`;
+      return `unit ${node.name} = ${print(node.expression)};`;
+
     case "BlockStatement":
       return `{\n${node.body.map((s) => `  ${print(s)}`)}\n}`;
 

@@ -16,8 +16,15 @@ Start_Expression
 
 ReplStatement
   = BlockStatement
+  / ReplUnitStatement
   / ReplLetStatement
   / ReplExpressionStatement
+
+ReplUnitStatement
+  = "unit" __ name:ID _ "=" _ expr:Expression
+    { return ast.makeUnitStatement(name, expr, { location: location() }) }
+  / "unit" __ name:ID
+    { return ast.makeUnitStatement(name, null, { location: location() }) }
 
 ReplLetStatement
   = "let" __ name:ID _ "=" _ expr:Expression
@@ -30,6 +37,7 @@ ReplExpressionStatement
 Statement
   = EmptyStatement
   / BlockStatement
+  / UnitStatement
   / LetStatement
   / ExpressionStatement
 
@@ -48,6 +56,12 @@ BlockStatement
     { return ast.makeBlockStatement([], { location: location() }) }
   / "{" _ body:StatementList _ "}"
     { return ast.makeBlockStatement(body, { location: location() }) }
+
+UnitStatement
+  = "unit" __ name:ID _ "=" _ expr:Expression _ ";"
+    { return ast.makeUnitStatement(name, expr, { location: location() }) }
+  / "unit" __ name:ID _ ";"
+    { return ast.makeBaseUnitStatement(name, { location: location() }) }
 
 LetStatement
   = "let" __ name:ID _ "=" _ expr:Expression _ ";"

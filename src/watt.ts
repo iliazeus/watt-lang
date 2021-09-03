@@ -6,23 +6,6 @@ import { value as v, parser, typecheck, interpreter, printer, util } from "./ind
 
 let ctx = new v.Context();
 
-{
-  const m = new v.DimConstructor(v.Dimensions.fromUnit("m"));
-  ctx = ctx.addType("m", m).addValue("m", m).addType("_m", new v.DimType(m));
-
-  const km = new v.DimConstructor(v.Dimensions.fromUnit("km"), m.baseDims, 1000);
-  ctx = ctx.addType("km", km).addValue("km", km).addType("_km", new v.DimType(m));
-
-  const s = new v.DimConstructor(v.Dimensions.fromUnit("s"));
-  ctx = ctx.addType("s", s).addValue("s", s).addType("_s", new v.DimType(s));
-
-  const min = new v.DimConstructor(v.Dimensions.fromUnit("min"), s.baseDims, 60);
-  ctx = ctx.addType("min", min).addValue("min", min).addType("_min", new v.DimType(min));
-
-  const h = new v.DimConstructor(v.Dimensions.fromUnit("h"), s.baseDims, 3600);
-  ctx = ctx.addType("h", h).addValue("h", h).addType("_h", new v.DimType(h));
-}
-
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
