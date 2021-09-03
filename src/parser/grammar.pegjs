@@ -15,7 +15,8 @@ Start_Expression
     { return expr }
 
 ReplStatement
-  = BlockStatement
+  = EmptyStatement
+  / BlockStatement
   / ReplUnitStatement
   / ReplLetStatement
   / ReplExpressionStatement
@@ -49,6 +50,8 @@ StatementList
 
 EmptyStatement
   = ";"
+    { return ast.makeEmptyStatement({ location: location() }) }
+  / "#" [^\n\r]+ EOL
     { return ast.makeEmptyStatement({ location: location() }) }
 
 BlockStatement
@@ -201,3 +204,4 @@ KW "keyword" = $("as" / "unit" / "type")
 
 _ "whitespace" = [ \t\n\r]*
 __ "whitespace" = [ \t\n\r]+
+EOL "end of line" = [\n\r]
