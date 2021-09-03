@@ -3,13 +3,22 @@ import * as v from "../value";
 
 import { RuntimeError } from "./error";
 
-export function evaluate<TMeta extends ast.LocationMeta>(
+export function evaluate<M extends ast.LocationMeta>(
   context: v.Context,
-  node: ast.Node<TMeta>
+  node: ast.Node<M>
 ): v.Value {
-  const valueOf = (e: typeof node) => evaluate(context, e);
+  return recurse(node);
 
-  try {
+  function recurse(node: ast.Node<M>): v.Value {
+    try {
+      return evaluate(node, recurse);
+    } catch (error) {
+      if (error instanceof RuntimeError) throw error;
+      throw RuntimeError.from(node, error);
+    }
+  }
+
+  function evaluate(node: ast.Node<M>, evaluate: typeof recurse): v.Value {
     switch (node.type) {
       case "Unit": {
         return new v.UnitValue();
@@ -40,11 +49,11 @@ export function evaluate<TMeta extends ast.LocationMeta>(
       }
 
       case "Parentheses": {
-        return valueOf(node.argument);
+        return evaluate(node.argument);
       }
 
       case "PrefixExpression": {
-        const argval = valueOf(node.argument);
+        const argval = evaluate(node.argument);
 
         switch (node.operator) {
           case "!":
@@ -64,7 +73,7 @@ export function evaluate<TMeta extends ast.LocationMeta>(
       }
 
       case "PowerExpression": {
-        const argval = valueOf(node.argument);
+        const argval = evaluate(node.argument);
 
         if (argval instanceof v.DimValue) return argval.power(node.power);
         if (argval instanceof v.DimConstructor) return argval.power(node.power);
@@ -73,8 +82,8 @@ export function evaluate<TMeta extends ast.LocationMeta>(
       }
 
       case "BinaryExpression": {
-        const left = valueOf(node.left);
-        const right = valueOf(node.right);
+        const left = evaluate(node.left);
+        const right = evaluate(node.right);
 
         if (left instanceof v.DimValue && right instanceof v.DimValue) {
           switch (node.operator) {
@@ -144,20 +153,20 @@ export function evaluate<TMeta extends ast.LocationMeta>(
       }
 
       case "LogicalExpression": {
-        const left = valueOf(node.left);
+        const left = evaluate(node.left);
         if (!(left instanceof v.BooleanValue)) throw RuntimeError.NotABoolean(node.left, left);
 
         switch (node.operator) {
           case "&&":
-            return left.value ? valueOf(node.right) : left;
+            return left.value ? evaluate(node.right) : left;
           case "||":
-            return left.value ? left : valueOf(node.right);
+            return left.value ? left : evaluate(node.right);
         }
       }
 
       case "AscriptionExpression": {
-        const left = valueOf(node.left);
-        const right = valueOf(node.right);
+        const left = evaluate(node.left);
+        const right = evaluate(node.right);
 
         if (!(left instanceof v.DimValue && left.isScalar))
           throw RuntimeError.NotAScalar(node.left, left);
@@ -167,8 +176,8 @@ export function evaluate<TMeta extends ast.LocationMeta>(
       }
 
       case "ConversionExpression": {
-        const left = valueOf(node.left);
-        const right = valueOf(node.right);
+        const left = evaluate(node.left);
+        const right = evaluate(node.right);
 
         if (!(left instanceof v.DimValue)) throw RuntimeError.NotANumber(node.left, left);
         if (!(right instanceof v.DimConstructor)) throw RuntimeError.NotAUnit(node.right, right);
@@ -180,8 +189,5 @@ export function evaluate<TMeta extends ast.LocationMeta>(
         return left.convertTo(right);
       }
     }
-  } catch (error) {
-    if (error instanceof RuntimeError) throw error;
-    throw RuntimeError.from(node, String(error));
   }
 }
