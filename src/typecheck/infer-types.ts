@@ -64,6 +64,16 @@ export function inferTypes<M extends ast.LocationMeta>(
         throw TypeError.VarMustHaveTypeOrValue(node);
       }
 
+      case "AssignmentStatement": {
+        const left = context.getType(node.name);
+        if (!left) throw TypeError.NameIsNotDefined(node, node.name);
+
+        const right = inferType(node.value);
+        if (!right.isSubtypeOf(left)) throw TypeError.TypeMismatch(node, left, right);
+
+        return left;
+      }
+
       case "UnitStatement": {
         if (!node.expression) {
           const type = new v.DimConstructor(v.Dimensions.fromUnit(node.name));

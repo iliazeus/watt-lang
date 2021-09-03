@@ -28,6 +28,14 @@ export function makeUnitStatement<M, MM = M>(
   return { type: "UnitStatement", name, expression, meta };
 }
 
+export function makeAssignmentStatement<M, MM = M>(
+  name: string,
+  value: ast.Expression<MM>,
+  meta: M
+): ast.AssignmentStatement<M, MM> {
+  return { type: "AssignmentStatement", name, value, meta };
+}
+
 export function makeLetStatement<M, MM = M>(
   name: string,
   expression: ast.Expression<MM>,

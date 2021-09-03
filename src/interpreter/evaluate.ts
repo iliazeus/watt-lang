@@ -67,6 +67,12 @@ export function evaluate<M extends ast.LocationMeta>(
         return value;
       }
 
+      case "AssignmentStatement": {
+        const value = evaluate(node.value);
+        context.setValue(node.name, value);
+        return value;
+      }
+
       case "LetStatement": {
         const value = evaluate(node.expression);
         context = context.addValue(node.name, value);

@@ -11,6 +11,9 @@ export function print(node: ast.Node<unknown>): string {
       if (!node.value) return `var ${node.name}: ${print(node.annotation)};`;
       return `var ${node.name}: ${print(node.annotation)} = ${print(node.value)};`;
 
+    case "AssignmentStatement":
+      return `${node.name} := ${print(node.value)};`;
+
     case "UnitStatement":
       if (!node.expression) return `unit ${node.name};`;
       return `unit ${node.name} = ${print(node.expression)};`;

@@ -9,6 +9,7 @@ export type Statement<M, MM = M> =
   | EmptyStatement<M>
   | BlockStatement<M, MM>
   | VarStatement<M, MM>
+  | AssignmentStatement<M, MM>
   | UnitStatement<M, MM>
   | LetStatement<M, MM>
   | ExpressionStatement<M, MM>;
@@ -26,6 +27,12 @@ export interface VarStatement<M, MM> extends BaseNode<M> {
   type: "VarStatement";
   name: string;
   annotation: Expression<MM> | null;
+  value: Expression<MM>;
+}
+
+export interface AssignmentStatement<M, MM> extends BaseNode<M> {
+  type: "AssignmentStatement";
+  name: string;
   value: Expression<MM>;
 }
 

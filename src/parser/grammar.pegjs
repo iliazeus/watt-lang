@@ -18,6 +18,7 @@ ReplStatement
   = EmptyStatement
   / BlockStatement
   / ReplVarStatement
+  / ReplAssignmentStatement
   / ReplUnitStatement
   / ReplLetStatement
   / ReplExpressionStatement
@@ -27,6 +28,10 @@ ReplVarStatement
     { return ast.makeVarStatement(name, ann, val, { location: location() }) }
   / "var" __ name:ID _ "=" _ val:Expression
     { return ast.makeVarStatement(name, null, val, { location: location() }) }
+
+ReplAssignmentStatement
+  = name:ID _ ":=" _ val:Expression
+    { return ast.makeAssignmentStatement(name, val, { location: location() }) }
 
 ReplUnitStatement
   = "unit" __ name:ID _ "=" _ expr:Expression
@@ -46,6 +51,7 @@ Statement
   = EmptyStatement
   / BlockStatement
   / VarStatement
+  / AssignmentStatement
   / UnitStatement
   / LetStatement
   / ExpressionStatement
@@ -73,6 +79,10 @@ VarStatement
     { return ast.makeVarStatement(name, ann, val, { location: location() }) }
   / "var" __ name:ID _ "=" _ val:Expression _ ";"
     { return ast.makeVarStatement(name, null, val, { location: location() }) }
+
+AssignmentStatement
+  = name:ID _ ":=" _ val:Expression _ ";"
+    { return ast.makeAssignmentStatement(name, val, { location: location() }) }
 
 UnitStatement
   = "unit" __ name:ID _ "=" _ expr:Expression _ ";"
@@ -214,7 +224,7 @@ INT "integer literal" = $([-+]? [0-9]+)
 NUM "numeric literal" = $([-+]? (([0-9]+([.][0-9]*)?) / ([.][0-9]+)) ([eE][-+]?[0-9]+)?)
 BOOL "boolean literal" = $("true") / $("false")
 ID "identifier" = $(!(KW) [a-zA-Z_][a-zA-Z0-9_]*)
-KW "keyword" = $("as" / "unit" / "type")
+KW "keyword" = $("as" / "let" / "type" / "unit" / "var")
 
 _ "whitespace" = [ \t\n\r]*
 __ "whitespace" = [ \t\n\r]+
