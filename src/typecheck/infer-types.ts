@@ -36,6 +36,20 @@ export function inferTypes<M extends ast.LocationMeta>(
   
         return new v.UnitValue();
       }
+
+      case "IfStatement": {
+        const condtype = inferType(node.condition);
+        
+        if (!(condtype instanceof v.BooleanValue || condtype instanceof v.BooleanType)) {
+          throw TypeError.NotABoolean(node.condition, condtype);
+        }
+
+        const ctx = context;
+        inferType(node.thenBody);
+        context = ctx;
+        if (node.elseBody) inferType(node.elseBody);
+        context = ctx;
+
         return new v.UnitValue();
       }
 

@@ -17,6 +17,7 @@ Start_Expression
 ReplStatement
   = EmptyStatement
   / BlockStatement
+  / IfStatement
   / WhileStatement
   / ReplVarStatement
   / ReplAssignmentStatement
@@ -51,6 +52,7 @@ ReplExpressionStatement
 Statement
   = EmptyStatement
   / BlockStatement
+  / IfStatement
   / WhileStatement
   / VarStatement
   / AssignmentStatement
@@ -75,6 +77,12 @@ BlockStatement
     { return ast.makeBlockStatement([], { location: location() }) }
   / "{" _ body:StatementList _ "}"
     { return ast.makeBlockStatement(body, { location: location() }) }
+
+IfStatement
+  = "if" _ "(" _ cond:Expression _ ")" _ thenBody:Statement _ "else" _ elseBody:Statement
+    { return ast.makeIfStatement(cond, thenBody, elseBody, { location: location() }) }
+  / "if" _ "(" cond:Expression ")" _ thenBody:Statement
+    { return ast.makeIfStatement(cond, thenBody, null, { location: location() }) }
 
 WhileStatement
   = "while" _ "(" _ cond:Expression _ ")" _ body:Statement

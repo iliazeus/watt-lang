@@ -21,6 +21,10 @@ export function print(node: ast.Node<unknown>): string {
     case "BlockStatement":
       return `{\n${node.body.map((s) => `  ${print(s)}`)}\n}`;
 
+    case "IfStatement":
+      if (!node.elseBody) return `if (${print(node.condition)}) ${print(node.thenBody)}`;
+      return `if (${print(node.condition)}) ${print(node.thenBody)} else ${print(node.elseBody)}`;
+
     case "WhileStatement":
       return `while (${print(node.condition)}) ${print(node.body)}`;
 

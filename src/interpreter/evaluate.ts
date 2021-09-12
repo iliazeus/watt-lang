@@ -29,7 +29,23 @@ export function evaluate<M extends ast.LocationMeta>(
         const ctx = context;
         node.body.forEach(evaluate);
         context = ctx;
-  
+
+        return new v.UnitValue();
+      }
+
+      case "IfStatement": {
+        const condval = evaluate(node.condition);
+        if (!(condval instanceof v.BooleanValue)) {
+          throw RuntimeError.NotABoolean(node.condition, condval);
+        }
+
+        const ctx = context;
+
+        if (condval.value) evaluate(node.thenBody);
+        else if (node.elseBody) evaluate(node.elseBody);
+
+        context = ctx;
+
         return new v.UnitValue();
       }
 

@@ -11,6 +11,15 @@ export function makeBlockStatement<M, MM = M>(
   return { type: "BlockStatement", body, meta };
 }
 
+export function makeIfStatement<M, MM = M>(
+  condition: ast.Expression<MM>,
+  thenBody: ast.Statement<MM>,
+  elseBody: ast.Statement<MM> | null,
+  meta: M
+): ast.IfStatement<M, MM> {
+  return { type: "IfStatement", condition, thenBody, elseBody, meta };
+}
+
 export function makeWhileStatement<M, MM = M>(
   condition: ast.Expression<MM>,
   body: ast.Statement<MM>,
