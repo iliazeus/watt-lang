@@ -4,6 +4,7 @@ export function isStatement<M, MM = M>(node: ast.Node<M, MM>): node is ast.State
   switch (node.type) {
     case "EmptyStatement":
     case "BlockStatement":
+    case "WhileStatement":
     case "VarStatement":
     case "UnitStatement":
     case "AssignmentStatement":

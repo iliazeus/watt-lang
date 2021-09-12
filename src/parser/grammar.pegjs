@@ -17,6 +17,7 @@ Start_Expression
 ReplStatement
   = EmptyStatement
   / BlockStatement
+  / WhileStatement
   / ReplVarStatement
   / ReplAssignmentStatement
   / ReplUnitStatement
@@ -50,6 +51,7 @@ ReplExpressionStatement
 Statement
   = EmptyStatement
   / BlockStatement
+  / WhileStatement
   / VarStatement
   / AssignmentStatement
   / UnitStatement
@@ -73,6 +75,10 @@ BlockStatement
     { return ast.makeBlockStatement([], { location: location() }) }
   / "{" _ body:StatementList _ "}"
     { return ast.makeBlockStatement(body, { location: location() }) }
+
+WhileStatement
+  = "while" _ "(" _ cond:Expression _ ")" _ body:Statement
+    { return ast.makeWhileStatement(cond, body, { location: location() }) }
 
 VarStatement
   = "var" __ name:ID _ ":" _ ann:Expression _ "=" _ val:Expression _ ";"

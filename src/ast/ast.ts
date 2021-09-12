@@ -8,6 +8,7 @@ export type Node<M, MM = M> = Statement<M, MM> | Expression<M, MM>;
 export type Statement<M, MM = M> =
   | EmptyStatement<M>
   | BlockStatement<M, MM>
+  | WhileStatement<M, MM>
   | VarStatement<M, MM>
   | AssignmentStatement<M, MM>
   | UnitStatement<M, MM>
@@ -21,6 +22,12 @@ export interface EmptyStatement<M> extends BaseNode<M> {
 export interface BlockStatement<M, MM> extends BaseNode<M> {
   type: "BlockStatement";
   body: Statement<MM>[];
+}
+
+export interface WhileStatement<M, MM> extends BaseNode<M> {
+  type: "WhileStatement";
+  condition: Expression<MM>;
+  body: Statement<MM>;
 }
 
 export interface VarStatement<M, MM> extends BaseNode<M> {

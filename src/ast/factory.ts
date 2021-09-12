@@ -11,6 +11,14 @@ export function makeBlockStatement<M, MM = M>(
   return { type: "BlockStatement", body, meta };
 }
 
+export function makeWhileStatement<M, MM = M>(
+  condition: ast.Expression<MM>,
+  body: ast.Statement<MM>,
+  meta: M
+): ast.WhileStatement<M, MM> {
+  return { type: "WhileStatement", condition, body, meta };
+}
+
 export function makeVarStatement<M, MM = M>(
   name: string,
   annotation: ast.Expression<MM> | null,

@@ -21,6 +21,9 @@ export function print(node: ast.Node<unknown>): string {
     case "BlockStatement":
       return `{\n${node.body.map((s) => `  ${print(s)}`)}\n}`;
 
+    case "WhileStatement":
+      return `while (${print(node.condition)}) ${print(node.body)}`;
+
     case "LetStatement":
       return `let ${node.name} = ${print(node.expression)};`;
 

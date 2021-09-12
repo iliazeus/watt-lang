@@ -26,7 +26,27 @@ export function evaluate<M extends ast.LocationMeta>(
       }
 
       case "BlockStatement": {
+        const ctx = context;
         node.body.forEach(evaluate);
+        context = ctx;
+  
+        return new v.UnitValue();
+      }
+
+      case "WhileStatement": {
+        const ctx = context;
+
+        while (true) {
+          const condval = evaluate(node.condition);
+          if (!(condval instanceof v.BooleanValue)) {
+            throw RuntimeError.NotABoolean(node.condition, condval);
+          }
+
+          if (!condval.value) break;
+          evaluate(node.body);
+        }
+
+        context = ctx;
         return new v.UnitValue();
       }
 

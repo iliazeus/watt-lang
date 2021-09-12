@@ -9,6 +9,9 @@ export function forEachChild<M>(node: ast.Node<M>, fn: (child: ast.Node<M>) => v
     case "BlockStatement":
       return node.body.forEach(fn), node;
 
+    case "WhileStatement":
+      return fn(node.condition), fn(node.body), node;
+
     case "VarStatement":
       return node.annotation && fn(node.annotation), node.value && fn(node.value), node;
     
@@ -55,6 +58,16 @@ export function mapChildren<M, MM>(
       const body = node.body.map(fn);
       assert(body.every(isStatement));
       return { ...node, body };
+    }
+
+    case "WhileStatement": {
+      const condition = fn(node.condition);
+      assert(isExpression(condition));
+
+      const body = fn(node.body);
+      assert(isStatement(body));
+
+      return { ...node, condition, body };
     }
 
     case "VarStatement": {

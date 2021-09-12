@@ -30,7 +30,26 @@ export function inferTypes<M extends ast.LocationMeta>(
       }
 
       case "BlockStatement": {
+        const ctx = context;
         node.body.forEach(inferType);
+        context = ctx;
+  
+        return new v.UnitValue();
+      }
+        return new v.UnitValue();
+      }
+
+      case "WhileStatement": {
+        const condtype = inferType(node.condition);
+        
+        if (!(condtype instanceof v.BooleanValue || condtype instanceof v.BooleanType)) {
+          throw TypeError.NotABoolean(node.condition, condtype);
+        }
+
+        const ctx = context;
+        inferType(node.body);
+        context = ctx;
+
         return new v.UnitValue();
       }
 
