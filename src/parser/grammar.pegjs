@@ -107,7 +107,7 @@ BinaryOperator_3
   = "==" / "!=" / "<=" / ">=" / "<" / ">"
 
 LogicalExpression_2
-  = left:Expression_5 _ op:LogicalOperator_2 _ right:Expression_2
+  = left:Expression_3 _ op:LogicalOperator_2 _ right:Expression_2
     { return ast.makeLogicalExpression(left, op, right, { location: location() }) }
 
 LogicalOperator_2
